@@ -1,0 +1,2835 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="박재환 · Backend Developer 포트폴리오 — 주소 검색 벤치마크 (Search Performance Engineering)">
+<title>주소 검색 벤치마크 · 박재환 Backend Developer Portfolio</title>
+<style>
+  :root{
+    --primary:#0066cc; --primary-focus:#0071e3; --primary-on-dark:#2997ff;
+    --ink:#1d1d1f; --body:#1d1d1f; --body-muted:#6e6e73;
+    --canvas:#ffffff; --parchment:#f5f5f7; --pearl:#fafafc;
+    --tile-dark:#272729; --tile-dark2:#2a2a2c; --tile-dark3:#1d1d1f;
+    --on-dark:#ffffff; --dark-muted:#a1a1a6;
+    --hairline:#e0e0e0; --divider:#f0f0f0;
+    --chip:#f5f5f7;
+    --shadow-product:0 5px 30px rgba(0,0,0,.22);
+    --nav-bg:rgba(0,0,0,.86);
+    --sub-bg:rgba(245,245,247,.72);
+    --maxw:1120px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ink:#f5f5f7; --body:#f5f5f7; --body-muted:#98989d;
+      --canvas:#000000; --parchment:#111113; --pearl:#1c1c1e;
+      --tile-dark:#1a1a1c; --tile-dark2:#212123; --tile-dark3:#161617;
+      --hairline:#2a2a2c; --divider:#1c1c1e; --chip:#1c1c1e;
+      --sub-bg:rgba(22,22,23,.72);
+    }
+  }
+  :root[data-theme="light"]{
+    --ink:#1d1d1f; --body:#1d1d1f; --body-muted:#6e6e73;
+    --canvas:#ffffff; --parchment:#f5f5f7; --pearl:#fafafc;
+    --tile-dark:#272729; --tile-dark2:#2a2a2c; --tile-dark3:#1d1d1f;
+    --hairline:#e0e0e0; --divider:#f0f0f0; --chip:#f5f5f7;
+    --sub-bg:rgba(245,245,247,.72);
+  }
+  :root[data-theme="dark"]{
+    --ink:#f5f5f7; --body:#f5f5f7; --body-muted:#98989d;
+    --canvas:#000000; --parchment:#111113; --pearl:#1c1c1e;
+    --tile-dark:#1a1a1c; --tile-dark2:#212123; --tile-dark3:#161617;
+    --hairline:#2a2a2c; --divider:#1c1c1e; --chip:#1c1c1e;
+    --sub-bg:rgba(22,22,23,.72);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--canvas); color:var(--body);
+    font-family:-apple-system,system-ui,"SF Pro Text","SF Pro Display","Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    font-size:17px; line-height:1.47; letter-spacing:-.374px;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    overflow-x:hidden; word-break:keep-all; overflow-wrap:break-word;
+  }
+  img{max-width:100%; height:auto; display:block;}
+  a{color:var(--primary); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  ::selection{background:rgba(0,102,204,.18);}
+
+  /* ---------- Nav ---------- */
+  .gnav{
+    position:sticky; top:0; z-index:50; height:44px;
+    background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .gnav__inner{
+    width:100%; max-width:var(--maxw); padding:0 22px;
+    display:flex; align-items:center; gap:26px;
+  }
+  .gnav a{
+    color:#e8e8ed; font-size:12px; letter-spacing:-.12px; line-height:1; opacity:.82;
+  }
+  .gnav a:hover{opacity:1; text-decoration:none;}
+  .gnav__brand{font-weight:600; opacity:1; letter-spacing:0;}
+  .gnav__spacer{flex:1;}
+
+  .subnav{
+    position:sticky; top:44px; z-index:40; height:52px;
+    background:var(--sub-bg); backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid color-mix(in srgb,var(--ink) 8%,transparent);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .subnav__inner{
+    width:100%; max-width:var(--maxw); padding:0 22px;
+    display:flex; align-items:center; gap:22px;
+  }
+  .subnav__title{font-size:21px; font-weight:600; letter-spacing:.02px; color:var(--ink);}
+  .subnav__spacer{flex:1;}
+  .subnav__links{display:flex; gap:22px;}
+  .subnav__links a{color:var(--ink); font-size:14px; letter-spacing:-.224px; opacity:.86;}
+  .subnav__links a:hover{opacity:1; text-decoration:none;}
+
+  /* ---------- Tiles ---------- */
+  .tile{padding:96px 22px; display:flex; justify-content:center;}
+  .tile--light{background:var(--canvas); color:var(--ink);}
+  .tile--parchment{background:var(--parchment); color:var(--ink);}
+  .tile--dark{background:var(--tile-dark); color:var(--on-dark);}
+  .tile--dark2{background:var(--tile-dark2); color:var(--on-dark);}
+  .tile--dark3{background:var(--tile-dark3); color:var(--on-dark);}
+  .tile--tight{padding:64px 22px;}
+  .wrap{width:100%; max-width:var(--maxw);}
+  .center{text-align:center;}
+
+  /* ---------- Type ---------- */
+  .eyebrow{font-size:14px; font-weight:600; letter-spacing:-.02px; color:var(--primary); margin:0 0 14px;}
+  .tile--dark .eyebrow,.tile--dark2 .eyebrow,.tile--dark3 .eyebrow{color:var(--primary-on-dark);}
+  .hero-display{
+    font-size:clamp(34px,6vw,56px); font-weight:600; line-height:1.07; letter-spacing:-.028em;
+    margin:0; text-wrap:balance;
+  }
+  .display-lg{font-size:clamp(28px,4.4vw,40px); font-weight:600; line-height:1.1; letter-spacing:-.01em; margin:0; text-wrap:balance;}
+  .display-md{font-size:clamp(24px,3.4vw,34px); font-weight:600; line-height:1.2; letter-spacing:-.011em; margin:0; text-wrap:balance;}
+  .lead{font-size:clamp(20px,2.4vw,28px); font-weight:400; line-height:1.2; letter-spacing:.007em; color:var(--body-muted); margin:16px 0 0;}
+  .tile--dark .lead,.tile--dark2 .lead,.tile--dark3 .lead{color:var(--dark-muted);}
+  .lead-airy{font-size:clamp(20px,2.2vw,24px); font-weight:300; line-height:1.5; margin:0;}
+  .tagline{font-size:21px; font-weight:600; line-height:1.19; letter-spacing:.011em; margin:0;}
+  .body{font-size:17px; line-height:1.47; letter-spacing:-.022em;}
+  .muted{color:var(--body-muted);}
+  .tile--dark .muted,.tile--dark2 .muted,.tile--dark3 .muted{color:var(--dark-muted);}
+  .caption{font-size:14px; line-height:1.43; letter-spacing:-.016em; color:var(--body-muted);}
+
+  /* ---------- Buttons ---------- */
+  .btns{display:flex; flex-wrap:wrap; gap:14px; margin-top:26px;}
+  .center .btns{justify-content:center;}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; font-size:17px; letter-spacing:-.022em;
+    padding:11px 22px; border-radius:9999px; border:1px solid transparent; cursor:pointer;
+    transition:transform .12s ease, background .2s ease; text-decoration:none;
+  }
+  .btn:active{transform:scale(.95); text-decoration:none;}
+  .btn:hover{text-decoration:none;}
+  .btn--primary{background:var(--primary); color:#fff;}
+  .btn--ghost{background:transparent; color:var(--primary); border-color:var(--primary);}
+  .tile--dark .btn--ghost,.tile--dark2 .btn--ghost,.tile--dark3 .btn--ghost{color:var(--primary-on-dark); border-color:var(--primary-on-dark);}
+  .btn:focus-visible{outline:2px solid var(--primary-focus); outline-offset:3px;}
+
+  /* ---------- Product image ---------- */
+  .shot{border-radius:18px; box-shadow:var(--shadow-product); overflow:hidden;}
+  .shot img{width:100%; height:auto; object-fit:contain; display:block;}
+
+  /* Device mockups: transparent bg, float with product shadow */
+  .device{background:transparent;}
+  /* images already carry a baked designer soft-shadow. The extra CSS drop-shadow filter
+     triggers an iOS Safari bug (filtered <img> renders black / disappears on scroll on
+     mobile), so apply it ONLY on precise-pointer desktops. Mobile falls back to the baked
+     shadow — still grounded, no glitch. */
+  .device img{width:100%; height:auto; display:block; -webkit-transform:translateZ(0);}
+  @media (hover:hover) and (pointer:fine){
+    .device img{filter:drop-shadow(0 12px 22px rgba(0,0,0,.14));}
+  }
+
+  /* Project index divider */
+  .projindex{display:flex; align-items:baseline; gap:16px; padding-top:30px; border-top:1px solid var(--hairline); margin-bottom:52px;}
+  .tile--dark .projindex,.tile--dark2 .projindex,.tile--dark3 .projindex{border-color:rgba(255,255,255,.16);}
+  .projindex .n{font-size:clamp(30px,4vw,40px); font-weight:600; letter-spacing:-.02em; line-height:1; opacity:.92;}
+  .projindex .lab{font-size:12px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--body-muted);}
+  .tile--dark .projindex .lab,.tile--dark2 .projindex .lab,.tile--dark3 .projindex .lab{color:var(--dark-muted);}
+
+  /* ---------- Hero ---------- */
+  .hero{display:grid; grid-template-columns:1.15fr .85fr; gap:56px; align-items:center;}
+  .hero__photo{justify-self:end; width:100%; max-width:360px; border-radius:22px; box-shadow:var(--shadow-product); overflow:hidden;}
+  .hero__photo img{width:100%; aspect-ratio:448/560; object-fit:cover;}
+
+  /* ---------- Info cards ---------- */
+  .grid{display:grid; gap:22px;}
+  .grid-2{grid-template-columns:repeat(2,1fr);}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .card{
+    background:var(--canvas); border:1px solid var(--hairline); border-radius:18px; padding:28px;
+  }
+  .tile--parchment .card{background:var(--canvas);}
+  .card h3{margin:0 0 16px; font-size:14px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--body-muted);}
+  .rows{display:flex; flex-direction:column; gap:12px;}
+  .row{display:flex; gap:14px; font-size:15px; line-height:1.4;}
+  .row .k{color:var(--body-muted); flex:0 0 96px; letter-spacing:-.01em;}
+  .row .v{color:var(--ink); flex:1;}
+  .list{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:11px;}
+  .list li{display:flex; gap:12px; font-size:15px; line-height:1.45; color:var(--ink);}
+  .list .date{color:var(--body-muted); flex:0 0 122px; font-variant-numeric:tabular-nums; letter-spacing:-.01em; white-space:nowrap;}
+  .badge{display:inline-block; font-size:12px; color:var(--primary); border:1px solid color-mix(in srgb,var(--primary) 35%,transparent); border-radius:9999px; padding:2px 9px; margin-right:6px;}
+
+  /* ---------- Skills ---------- */
+  .skillcat{margin-bottom:40px;}
+  .skillcat > h3{margin:0 0 20px; font-size:14px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--primary);}
+  .skillgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px 40px;}
+  .skill{display:grid; grid-template-columns:150px 1fr; align-items:start; gap:18px; padding:16px 0; border-top:1px solid var(--divider);}
+  .skill__name{font-weight:600; font-size:17px; letter-spacing:-.02em;}
+  .skill__body{}
+  .meter{display:flex; gap:6px; margin-bottom:8px;}
+  .dot{width:22px; height:6px; border-radius:9999px; background:var(--hairline);}
+  .dot.on{background:var(--primary);}
+  .skill__desc{font-size:13.5px; line-height:1.45; color:var(--body-muted); letter-spacing:-.01em;}
+
+  /* ---------- Project ---------- */
+  .phero{display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center;}
+  .phero__phone{max-width:320px; margin:0 auto;}
+  .phero--rev .phero__text{order:2;}
+  /* Project cover contribution line — role label + body-size text (not an oversized hero lead) */
+  .rolelead{margin:24px 0 0;}
+  .rolelead .rl-label{display:flex; align-items:center; gap:10px; margin:0 0 10px; font-size:12px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--primary);}
+  .rolelead .rl-label::after{content:""; height:1px; width:32px; background:currentColor; opacity:.45;}
+  .tile--dark .rolelead .rl-label,.tile--dark2 .rolelead .rl-label,.tile--dark3 .rolelead .rl-label{color:var(--primary-on-dark);}
+  .rolelead p{margin:0; font-size:17px; line-height:1.55; font-weight:500; letter-spacing:-.014em; color:var(--ink); max-width:36ch;}
+  .rolelead p + p{margin-top:12px;}
+  .tile--dark .rolelead p,.tile--dark2 .rolelead p,.tile--dark3 .rolelead p{color:var(--on-dark);}
+  .meta{display:flex; flex-wrap:wrap; gap:10px 26px; margin-top:26px;}
+  .meta .m{display:flex; flex-direction:column; gap:3px;}
+  .meta .m .lbl{font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--body-muted);}
+  .tile--dark .meta .m .lbl{color:var(--dark-muted);}
+  .meta .m .val{font-size:15px; font-weight:600; letter-spacing:-.01em;}
+
+  .feat3{display:grid; grid-template-columns:repeat(3,1fr); gap:26px; margin-top:44px;}
+  .feat{display:flex; flex-direction:column; gap:16px;}
+  .feat .shot{aspect-ratio:auto;}
+  .feat img{width:100%;}
+  .feat .phone{max-width:230px; margin:0 auto;}
+  .feat h4{margin:0; font-size:19px; font-weight:600; letter-spacing:-.02em;}
+  .feat p{margin:0; font-size:14.5px; line-height:1.5; color:var(--body-muted);}
+  .tile--dark .feat p{color:var(--dark-muted);}
+
+  .contrib{display:grid; grid-template-columns:1fr 1fr; gap:52px; align-items:center;}
+  .contrib--rev .contrib__img{order:2;}
+  .cblock{margin-bottom:30px;}
+  .cblock:last-child{margin-bottom:0;}
+  .cblock h4{margin:0 0 12px; font-size:19px; font-weight:600; letter-spacing:-.02em; display:flex; align-items:center; gap:10px;}
+  .cblock h4::before{content:""; width:7px; height:7px; border-radius:9999px; background:var(--primary); flex:0 0 auto;}
+  .bul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:9px;}
+  .bul li{position:relative; padding-left:18px; font-size:15px; line-height:1.5; color:var(--body-muted);}
+  .tile--dark .bul li,.tile--dark2 .bul li{color:var(--dark-muted);}
+  .bul li::before{content:""; position:absolute; left:2px; top:9px; width:5px; height:5px; border-radius:50%; background:color-mix(in srgb,var(--primary) 60%,transparent);}
+
+  /* Trouble shooting */
+  .ts{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:40px;}
+  .tscard{background:var(--canvas); border:1px solid var(--hairline); border-radius:18px; padding:26px;}
+  .tscard .tag{display:inline-block; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:5px 12px; border-radius:9999px; margin-bottom:16px;}
+  .tag--t{background:color-mix(in srgb,#ff3b30 12%,transparent); color:#c9362c;}
+  .tag--c{background:color-mix(in srgb,#ff9500 14%,transparent); color:#b26a00;}
+  .tag--s{background:color-mix(in srgb,var(--primary) 12%,transparent); color:var(--primary);}
+  .tscard ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:9px;}
+  .tscard li{font-size:14px; line-height:1.5; color:var(--ink);}
+  .tscard li::marker{color:var(--body-muted);}
+
+  /* Retrospect */
+  .retro{display:grid; grid-template-columns:repeat(2,1fr); gap:26px; margin-top:40px;}
+  .rcard{border:1px solid var(--hairline); border-radius:18px; padding:28px; background:var(--canvas);}
+  .rcard h4{margin:0 0 14px; font-size:18px; font-weight:600; letter-spacing:-.02em;}
+  .rcard .lab{font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--primary); margin:16px 0 8px;}
+  .rcard p{margin:0; font-size:14.5px; line-height:1.55; color:var(--body-muted);}
+
+  .sectlabel{font-size:14px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--primary); margin:0 0 12px;}
+
+  /* Footer */
+  .footer{background:var(--parchment); color:var(--body-muted); padding:64px 22px 48px; display:flex; justify-content:center;}
+  .footer__inner{width:100%; max-width:var(--maxw);}
+  .footer__cols{display:grid; grid-template-columns:2fr 1fr 1fr; gap:40px; padding-bottom:40px; border-bottom:1px solid var(--hairline);}
+  .footer h5{margin:0 0 14px; font-size:14px; font-weight:600; color:var(--ink); letter-spacing:-.01em;}
+  .footer .flist{display:flex; flex-direction:column; gap:9px; font-size:14px;}
+  .footer .flist a,.footer .flist span{color:var(--body-muted);}
+  .footer__legal{padding-top:22px; font-size:12px; color:var(--body-muted);}
+
+  .theme-toggle{
+    background:transparent; border:none; color:#e8e8ed; font-size:12px; cursor:pointer; opacity:.82; letter-spacing:-.12px;
+  }
+  .theme-toggle:hover{opacity:1;}
+
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr; gap:36px;}
+    .hero__photo{justify-self:center; max-width:300px; order:-1;}
+    .grid-3,.grid-2{grid-template-columns:1fr;}
+    .skillgrid{grid-template-columns:1fr; gap:0 0;}
+    .phero{grid-template-columns:1fr; gap:32px;}
+    .phero--rev .phero__text{order:0;}
+    .phero__img{order:-1;}
+    /* On mobile, keep .shot images (contribution diagrams/code + cover phone) contained,
+       not edge-to-edge full-bleed — they read as too large otherwise */
+    .phero__phone{max-width:230px;}
+    .contrib__img{max-width:320px; margin-left:auto; margin-right:auto;}
+    .feat3{grid-template-columns:1fr; gap:40px; max-width:360px; margin-left:auto; margin-right:auto;}
+    .contrib{grid-template-columns:1fr; gap:32px;}
+    .contrib--rev .contrib__img{order:-1;}
+    .ts{grid-template-columns:1fr;}
+    .retro{grid-template-columns:1fr;}
+    .footer__cols{grid-template-columns:1fr; gap:28px;}
+    .subnav__links{display:none;}
+  }
+  @media (max-width:560px){
+    .tile{padding:64px 20px;}
+    .skill{grid-template-columns:1fr; gap:10px;}
+    .gnav__inner{gap:16px; overflow-x:auto;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important; transition:none !important;}
+  }
+
+  /* ---------- Organisation tabs ---------- */
+  /* Projects were built at two different institutions; the segmented control
+     on the Projects header swaps which institution's work is on screen. */
+  .orgtabs{
+    display:inline-flex; gap:4px; margin:44px auto 0; padding:5px;
+    max-width:100%; vertical-align:top;
+    border-radius:9999px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+  }
+  .orgtabs button{
+    appearance:none; -webkit-appearance:none; border:0; cursor:pointer;
+    background:transparent; color:rgba(255,255,255,.68);
+    font-family:inherit; border-radius:9999px; padding:11px 26px;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    white-space:nowrap; transition:background .2s ease,color .2s ease;
+  }
+  .orgtabs .ot__name{font-size:16px; font-weight:600; letter-spacing:-.018em; line-height:1.2;}
+  .orgtabs .ot__meta{font-size:12px; font-weight:400; letter-spacing:-.004em; line-height:1.2; opacity:.72;}
+  .orgtabs button:hover{color:#fff;}
+  .orgtabs button[aria-selected="true"]{background:#fff; color:#1d1d1f;}
+  .orgtabs button[aria-selected="true"] .ot__meta{color:#6e6e73; opacity:1;}
+  .orgtabs button:focus-visible{outline:2px solid var(--primary-on-dark); outline-offset:3px;}
+
+  .orgpanel[hidden]{display:none;}
+
+  /* sticky nav (44) + sub nav (52) must not cover an anchored section */
+  .tile{scroll-margin-top:104px;}
+
+  /* ---------- Project cover without a product shot ---------- */
+  .pcover{max-width:760px;}
+  .pcover .rolelead p{max-width:none;}
+  .pcover .meta{margin-top:32px;}
+
+  @media (max-width:900px){
+    .orgtabs{display:flex; flex-direction:column; gap:4px; width:100%; border-radius:20px;}
+    .orgtabs button{padding:13px 20px; border-radius:16px; white-space:normal;}
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     DESIGN.md — Tesla 계열
+     흰 캔버스 · Electric Blue 단일 액센트(CTA/링크 전용) · Universal Sans ·
+     letter-spacing 은 항상 normal · 굵기는 400/500 두 개뿐 · 그림자 0 ·
+     모서리는 0/4px/12px 세 단계 · 모든 상태 전환은 0.33s.
+
+     문서에 없어 판단한 것 세 가지 — 새 브랜드 색은 만들지 않았다.
+     1) 다크. DESIGN.md 에 다크 팔레트가 없다. 토글을 유지해야 하므로 문서에
+        있는 Carbon Dark(#171a20, "dark surface")를 캔버스로, Graphite ·
+        Pewter · Pale Silver · Silver Fog 를 그대로 승격해 썼다. 다크에서
+        Electric Blue 원색은 본문 대비가 3.5:1 이라 작은 글자에 못 쓴다.
+        그래서 다크에서만 흰색과 섞어(color-mix) 밝기를 올렸다 — 문서의
+        파랑에서 파생한 값이지 새 색이 아니다.
+     2) 초록/빨강. Blue/Green 배포 시연에서 색은 장식이 아니라 정보다.
+        Tesla 팔레트에는 의미색이 없으므로 이 둘만 예외로 남기고, 칩과
+        상태 줄에만 쓴다. 나머지 화면에는 파랑 하나뿐이다.
+     3) 본문 행간. 문서의 본문은 14px/20px(1.43)이다. 한글은 이 행간에서
+        붙어 읽혀 산문 단락만 1.7 로 열었다. 크기·굵기·자간은 문서 그대로다.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  /* 읽기 폭. 좌측 플로팅 목차(160px)가 들어설 여백을 남겨야 하므로 넓히지
+     않는다 — 980 + 목차 좌우 여백 = 1340px 부터 목차가 뜬다. */
+  .vf .vfwrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+  /* 전체 폭 밴드 — 선이 아니라 면이 구분한다 */
+  .vf .bleed { margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); width: 100vw; }
+
+  /* ── 히어로 — 한 화면에 메시지 하나. 다만 뷰포트 전체를 비우면 첫 화면이
+     빈 여백만 보여 실제로 읽을 것이 없다. 위아래 여백만 넉넉히 둔다. */
+  
+
+  .vf .eyebrow {
+    font-family: var(--ui);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.43;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    margin: 0 0 16px;
+  }
+
+  .vf h1 {
+    font-family: var(--display);
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  /* ── 서브내비 — 떠 있되 테두리도 그림자도 없다 ────────────────────── */
+  .vf .tabbar-outer {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--canvas) 75%, transparent);
+    backdrop-filter: saturate(120%) blur(16px);
+    -webkit-backdrop-filter: saturate(120%) blur(16px);
+    margin-bottom: 56px;
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .vf .tabbar-outer { background: var(--canvas); }
+  }
+
+  .vf .tabbar {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .vf .tabbar::-webkit-scrollbar { display: none; }
+
+  .vf .tabbar button {
+    flex: 0 0 auto;
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    min-height: 32px;
+    padding: 4px 16px;
+    font-family: var(--ui);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    transition: color var(--t), background-color var(--t);
+  }
+
+  .vf .tabbar button:hover { color: var(--ink); background: var(--parchment); }
+  .vf .tabbar button .n { font-size: 12px; letter-spacing: -0.01em; color: var(--faint); }
+  .vf .tabbar button[aria-selected="true"] { color: var(--ink); background: var(--parchment); }
+  .vf .tabbar button[aria-selected="true"] .n { color: var(--primary); }
+  .vf .tabbar button:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: -2px; border-radius: 4px; }
+
+  /* ── 패널 ─────────────────────────────────────────────────────────── */
+  .vf [role="tabpanel"] { padding-bottom: 96px; }
+  .vf [role="tabpanel"][hidden] { display: none; }
+
+  .vf .panel-head { margin-bottom: 48px; text-align: center; }
+
+  .vf .panel-head h2 {
+    font-family: var(--display);
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 16px;
+    text-wrap: balance;
+  }
+
+  .vf .panel-head .sub {
+    font-family: var(--ui);
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  /* 산문은 읽기 폭을 유지하되 제목·표·카드와 같은 왼쪽 선에서 시작한다. */
+  .vf .col { max-width: 720px; margin: 0; }
+
+  .vf h3 {
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 64px 0 16px;
+    text-wrap: balance;
+  }
+
+  /* 절 구분은 선이 아니라 여백이 한다 — Tesla 는 컨테이너에 선을 긋지 않는다 */
+  .vf h4.sec {
+    font-family: var(--display);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 96px 0 16px;
+  }
+
+  .vf p { margin: 0 0 16px; line-height: 1.7; text-wrap: pretty; }
+  .vf .col > p:last-child { margin-bottom: 0; }
+  .vf strong { font-weight: 500; color: var(--ink); }
+
+  .vf code {
+    font-family: var(--code);
+    font-size: .92em;
+    letter-spacing: normal;
+    background: var(--parchment);
+    padding: .1em .4em;
+    border-radius: 4px;
+    word-break: break-word;
+  }
+
+  .vf .lede {
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 32px;
+  }
+
+  .vf a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--t), box-shadow var(--t) var(--ease);
+  }
+  .vf a:hover { text-decoration: underline; }
+
+  /* ── 프로젝트 신원 ────────────────────────────────────────────────── */
+  .vf .idcard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 0 0 64px;
+  }
+
+  .vf .idcard div {
+    background: var(--parchment);
+    border: none;
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .vf .idcard dt {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.43;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    margin-bottom: 8px;
+  }
+
+  .vf .idcard dd {
+    margin: 0;
+    font-family: var(--ui);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .vf .idcard dd .sub2 {
+    display: block;
+    font-family: var(--ui);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.43;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    margin-top: 8px;
+  }
+
+  /* ── 역할 카드 ────────────────────────────────────────────────────── */
+  .vf .roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 32px 0 0; }
+
+  .vf .role {
+    background: var(--parchment);
+    border: none;
+    border-radius: 12px;
+    padding: 32px;
+  }
+
+  .vf .role .rk {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .vf .role h5 {
+    font-family: var(--ui);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 12px;
+  }
+
+  .vf .role p { font-size: 14px; line-height: 1.7; color: var(--body); margin: 0 0 16px; }
+  .vf .role p:last-child { margin-bottom: 0; }
+
+  .vf .role .rmetric {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.43;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-top: 24px;
+    display: block;
+  }
+
+  /* ── 갈래 카드 ────────────────────────────────────────────────────── */
+  .vf .branches { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 32px 0 0; }
+
+  .vf .branches button {
+    appearance: none;
+    text-align: left;
+    background: var(--parchment);
+    border: none;
+    border-radius: 12px;
+    padding: 32px;
+    cursor: pointer;
+    font-family: inherit;
+    color: inherit;
+    display: block;
+    transition: background-color var(--t), color var(--t);
+  }
+
+  .vf .branches button:hover { background: var(--pearl); }
+  .vf .branches button:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 2px; }
+
+  .vf .branches .k {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .vf .branches .ttl {
+    font-family: var(--ui);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .vf .branches .d { font-size: 14px; color: var(--body); display: block; line-height: 1.7; }
+
+  .vf .branches .go {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary);
+    display: block;
+    margin-top: 24px;
+  }
+
+  /* ── 지표 ─────────────────────────────────────────────────────────── */
+  .vf .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(208px, 1fr)); gap: 16px; margin: 0 0 24px; }
+
+  .vf .stat {
+    background: var(--parchment);
+    border: none;
+    border-radius: 12px;
+    padding: 32px;
+  }
+
+  .vf .stat .lbl {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.43;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    display: block;
+    margin-bottom: 16px;
+    min-height: 40px;
+  }
+
+  .vf .stat .val {
+    font-family: var(--display);
+    font-size: 40px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    display: block;
+  }
+
+  .vf .stat .val .u { font-size: 17px; font-weight: 400; letter-spacing: -0.01em; color: var(--body-mute); }
+  .vf .stat.hero .val { color: var(--primary); }
+
+  .vf .stat .note {
+    font-size: 14px;
+    line-height: 1.43;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    display: block;
+    margin-top: 16px;
+  }
+
+  /* 근거 등급 — 액센트를 쓰지 않고 명도만으로 가른다 */
+  .vf .pv {
+    display: inline-block;
+    font-family: var(--ui);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    line-height: 1.5;
+    vertical-align: 1px;
+  }
+  .vf .pv.m { background: var(--ink); color: var(--canvas); border: 1px solid var(--ink); }
+  .vf .pv.c { background: transparent; color: var(--ink); border: 1px solid var(--hairline); }
+  /* 다크에서 Silver Fog 를 Cloud Gray 면에 얹으면 3.4:1 이라 12px 글자가
+     읽히지 않는다. 이 칩만 본문색(Graphite/Pale Silver)을 쓴다. */
+  .vf .pv.s { background: var(--pearl); color: var(--body); border: 1px solid transparent; }
+
+  .vf .stat .lbl .pv { margin-left: 8px; }
+
+  .vf .legend {
+    font-size: 14px;
+    line-height: 2;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    margin: 0 0 48px;
+  }
+  .vf .legend .pv { margin-right: 8px; }
+
+  /* ── 표 ───────────────────────────────────────────────────────────── */
+  .vf .tw { overflow-x: auto; margin: 32px 0 8px; }
+
+  .vf table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--ui);
+    font-size: 14px;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    background: transparent;
+  }
+
+  .vf caption {
+    caption-side: bottom;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.43;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    padding-top: 16px;
+  }
+
+  .vf th {
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    border-bottom: 1px solid var(--hairline);
+    padding: 12px 16px 12px 0;
+    white-space: nowrap;
+  }
+
+  .vf td { padding: 16px 16px 16px 0; border-bottom: 1px solid var(--divider); vertical-align: top; line-height: 1.6; }
+  .vf td.mono, .vf th.mono { font-family: var(--code); font-size: 13px; letter-spacing: normal; }
+  .vf td.num { text-align: right; }
+
+  .vf .chip {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .vf .chip.ok { background: var(--ink); color: var(--canvas); }
+  .vf .chip.no { background: var(--pearl); color: var(--body-mute); }
+
+  /* ── 그림 — 전체 폭 Light Ash 밴드 ────────────────────────────────── */
+  .vf figure {
+    margin: 64px 0;
+    background: var(--parchment);
+    color: var(--body);
+    padding: 80px 24px 56px;
+  }
+
+  .vf .fig-scroll { overflow-x: auto; max-width: 1080px; margin: 0 auto; }
+
+  .vf figure svg { display: block; max-width: 100%; height: auto; margin: 0 auto; color: var(--body-mute); }
+
+  .vf figcaption {
+    max-width: 720px;
+    /* 전체 폭 밴드 안에서 본문 왼쪽 선(932px 컨테이너의 시작)에 맞춘다 */
+    margin: 48px auto 0 max(0px, calc(50% - 466px));
+    font-size: 14px;
+    line-height: 1.7;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    text-wrap: pretty;
+  }
+
+  .vf figcaption strong { color: var(--ink); font-weight: 500; }
+
+  .vf figcaption code { background: var(--canvas); color: var(--ink); }
+
+  /* 다이어그램. 강조는 없다 — 구조만 보여준다. */
+  .vf svg .box { fill: var(--canvas); stroke: none; rx: 4; }
+  .vf svg .box-d { fill: var(--canvas); stroke: var(--hairline); stroke-width: 1.5; stroke-dasharray: 5 3; }
+  .vf svg .zone { fill: none; stroke: var(--hairline); stroke-width: 1; stroke-dasharray: 3 4; }
+  .vf svg .t { fill: var(--body); font-family: var(--ui); font-size: 14px; letter-spacing: -0.01em; }
+  .vf svg .t-b { fill: var(--ink); font-family: var(--ui); font-size: 14px; font-weight: 500; letter-spacing: -0.01em; }
+  .vf svg .t-s { fill: var(--body-mute); font-family: var(--ui); font-size: 12px; letter-spacing: -0.01em; }
+  .vf svg .t-z { fill: var(--body-mute); font-family: var(--ui); font-size: 12px; letter-spacing: -0.01em; }
+  .vf svg .ln { stroke: var(--body-mute); stroke-width: 1; fill: none; }
+  .vf svg .ln-d { stroke: var(--body-mute); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+
+  /* ── 결정 카드 ────────────────────────────────────────────────────── */
+  .vf .decisions { display: grid; gap: 16px; margin: 32px 0 0; }
+
+  .vf .dec {
+    background: var(--parchment);
+    border: none;
+    border-radius: 12px;
+    padding: 32px;
+  }
+
+  .vf .dec h5 {
+    font-family: var(--ui);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 12px;
+  }
+
+  .vf .dec p { font-size: 14px; line-height: 1.7; color: var(--body); margin: 0; }
+
+  .vf .dec .tag {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .vf ul.plain { margin: 0 0 16px; padding-left: 24px; }
+  .vf ul.plain li { margin-bottom: 12px; line-height: 1.7; }
+
+  .vf .warnbox {
+    background: var(--parchment);
+    border-radius: 12px;
+    padding: 32px;
+    margin: 32px 0;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .vf .warnbox p { margin: 0; }
+  .vf .warnbox p + p { margin-top: 16px; }
+
+  .vf .snippet {
+    font-family: var(--code);
+    font-size: 13px;
+    letter-spacing: normal;
+    background: var(--parchment);
+    padding: 32px;
+    border-radius: 12px;
+    line-height: 1.6;
+    margin: 32px 0;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--ink);
+  }
+
+  /* ── 플로팅 목차 ──────────────────────────────────────────────────────
+     긴 탭(수집·정제·배포)에서 원하는 절로 바로 가기 위한 것. 읽기 폭 바깥
+     여백에 놓으므로 본문을 가리지 않고, 여백이 없는 화면에서는 숨긴다. */
+  .vf #toc {
+    display: none;
+    position: fixed;
+    top: 76px;
+    left: calc(50% - 640px);
+    width: 160px;
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+    z-index: 15;
+    scrollbar-width: none;
+    opacity: 0;
+    transition: opacity var(--t);
+    pointer-events: none;
+  }
+
+  .vf #toc::-webkit-scrollbar { display: none; }
+
+  /* 탭 바가 상단에 붙은 뒤에만 나타난다 — 그 전에는 바와 겹친다 */
+  .vf #toc.on { opacity: 1; pointer-events: auto; }
+
+  @media (min-width: 1340px) {
+    .vf #toc[data-show="1"] { display: block; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vf #toc { transition: none; }
+  }
+
+  .vf #toc .toc-label {
+    font-size: 12px;
+    letter-spacing: -0.01em;
+    color: var(--faint);
+    margin: 0 0 12px 16px;
+  }
+
+  .vf #toc ol { list-style: none; margin: 0; padding: 0; }
+
+  .vf #toc a {
+    display: block;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    text-decoration: none;
+    word-break: keep-all;
+    transition: color var(--t), background-color var(--t);
+  }
+
+  .vf #toc a.sub { padding-left: 28px; }
+  .vf #toc a:hover { color: var(--ink); background: var(--parchment); text-decoration: none; }
+
+  .vf #toc a[aria-current="true"] {
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .vf #toc a:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: -2px; border-radius: 4px; }
+
+  .vf footer.foot {
+    background: var(--parchment);
+    padding: 80px 0;
+    font-size: 12px;
+    line-height: 1.7;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+  }
+
+  .vf footer.foot p { margin: 0 0 12px; max-width: 720px; }
+  .vf footer.foot p:last-child { margin-bottom: 0; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     시연 UI
+     ══════════════════════════════════════════════════════════════════════ */
+  .vf .demo {
+    border: none;
+    border-radius: 12px;
+    margin: 32px 0 8px;
+    overflow: hidden;
+    background: var(--parchment);
+  }
+
+  .vf .demo-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 24px;
+  }
+
+  .vf .demo-bar label {
+    font-size: 14px;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+  }
+
+  .vf .demo-bar input {
+    flex: 1 1 240px;
+    min-width: 0;
+    height: 40px;
+    font-family: var(--code);
+    font-size: 14px;
+    letter-spacing: normal;
+    color: var(--ink);
+    background: var(--canvas);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 8px 16px;
+    transition: border-color var(--t);
+  }
+
+  .vf .demo-bar input::placeholder { color: var(--faint); }
+  .vf .demo-bar input:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 1px; }
+
+  /* 1차 CTA — Electric Blue. 화면당 최대 두 개까지만 둔다. */
+  .vf .demo-bar button {
+    appearance: none;
+    font-family: var(--ui);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--on-primary);
+    background: var(--primary);
+    border: none;
+    border-radius: 4px;
+    min-height: 40px;
+    min-width: 160px;
+    padding: 4px 24px;
+    cursor: pointer;
+    transition: background-color var(--t), color var(--t), border-color var(--t);
+  }
+
+  .vf .demo-bar button:hover { background: var(--primary-hover); }
+  .vf .demo-bar button:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 3px; }
+
+  .vf .demo-presets { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 24px 24px; }
+
+  /* 2차 — 흰 면에 Graphite. 색만 바뀐다(스케일·이동 없음). */
+  .vf .demo-presets .preset {
+    appearance: none;
+    font-family: var(--code);
+    font-size: 13px;
+    letter-spacing: normal;
+    color: var(--body);
+    background: var(--canvas);
+    border: none;
+    border-radius: 4px;
+    min-height: 32px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color var(--t), color var(--t);
+  }
+
+  .vf .demo-presets .preset:hover { background: var(--ink); color: var(--canvas); }
+  .vf .demo-presets .preset:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 2px; }
+
+  .vf .demo-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1px; background: var(--divider); }
+  @media (max-width: 760px) { .vf .demo-grid { grid-template-columns: 1fr; } }
+
+  .vf .demo-pane { padding: 32px; min-width: 0; background: var(--parchment); }
+
+  .vf .demo-pane h5 {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    margin: 0 0 24px;
+  }
+
+  .vf .step { margin-bottom: 16px; opacity: 0; }
+  .vf .step.show { opacity: 1; transition: opacity var(--t) ease-out; }
+  @media (prefers-reduced-motion: reduce) { .vf .step { opacity: 1; } .vf .step.show { transition: none; } }
+
+  .vf .step-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+
+  .vf .step-head .num {
+    font-family: var(--ui);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--canvas);
+    background: var(--ink);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  .vf .step-head .step-title {
+    font-family: var(--ui);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .vf .step-head .step-desc { font-family: var(--code); font-size: 12px; letter-spacing: normal; color: var(--body-mute); }
+
+  .vf .chars { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .vf .ch {
+    font-family: var(--code);
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: normal;
+    padding: 8px 7px;
+    min-width: 26px;
+    text-align: center;
+    border-radius: 4px;
+    border: none;
+    background: var(--canvas);
+    color: var(--body);
+  }
+
+  .vf .ch.sub { background: var(--primary); color: var(--on-primary); font-weight: 500; }
+  .vf .ch.del { background: var(--pearl); color: var(--faint); text-decoration: line-through; }
+  .vf .ch.empty { background: transparent; color: var(--faint); }
+
+  .vf .step .notes { font-size: 12px; letter-spacing: -0.01em; color: var(--body-mute); margin-top: 8px; }
+
+  .vf .result { opacity: 0; }
+  .vf .result.show { opacity: 1; transition: opacity var(--t) ease-out; }
+  @media (prefers-reduced-motion: reduce) { .vf .result { opacity: 1; } .vf .result.show { transition: none; } }
+
+  .vf .result .rlabel, .vf .result .viewlabel {
+    font-size: 14px;
+    line-height: 1.43;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    margin-bottom: 8px;
+  }
+
+  .vf .result .viewlabel { margin-top: 32px; }
+
+  .vf .result .final {
+    font-family: var(--code);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: normal;
+    color: var(--ink);
+    word-break: break-all;
+    padding: 16px;
+    background: var(--canvas);
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  .vf .result .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .vf .result .vfbadge {
+    font-family: var(--ui);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    padding: 8px 16px;
+    border-radius: 4px;
+  }
+
+  .vf .result .vfbadge.block { background: var(--ink); color: var(--canvas); }
+  .vf .result .vfbadge.pass { background: var(--canvas); color: var(--body); }
+  .vf .result .vfbadge.word { background: var(--pearl); color: var(--body-mute); font-family: var(--code); letter-spacing: normal; }
+
+  .vf .result .whitelist-note {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--body-mute);
+    background: var(--canvas);
+    border-radius: 4px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+
+  .vf .result .views { display: flex; flex-direction: column; gap: 8px; }
+
+  .vf .viewchip {
+    font-family: var(--code);
+    font-size: 13px;
+    letter-spacing: normal;
+    color: var(--body-mute);
+    background: var(--canvas);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 10px 16px;
+    word-break: break-all;
+  }
+
+  .vf .viewchip.hit { color: var(--primary); border-color: var(--primary); font-weight: 500; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     흐름 시연(채팅·배포 공용) — Light Ash 면 위. 강조는 Electric Blue 하나.
+     ══════════════════════════════════════════════════════════════════════ */
+  .vf .flowdemo {
+    border: none;
+    border-radius: 12px;
+    background: var(--parchment);
+    color: var(--body);
+  }
+
+  .vf .flowdemo .demo-bar { padding: 24px; justify-content: center; }
+  .vf .flowdemo .demo-bar label { color: var(--body-mute); }
+  .vf .flowdemo .demo-bar input { max-width: 420px; }
+
+  .vf .flowdemo .demo-pane { padding: 40px 24px; background: transparent; }
+  .vf .flowdemo .demo-pane h5 { text-align: center; }
+  .vf .flowdemo .demo-pane h5 span { color: var(--primary); font-variant-numeric: tabular-nums; }
+
+  .vf .flowdemo svg { width: 100%; height: auto; display: block; max-width: 900px; margin: 0 auto; }
+
+  .vf .flowdemo .node rect { fill: var(--canvas); stroke: none; rx: 4; }
+  .vf .flowdemo .node.done rect { fill: var(--canvas); }
+  .vf .flowdemo .node.on rect { fill: var(--primary); stroke: none; }
+  .vf .flowdemo .node text { fill: var(--body-mute); font-family: var(--ui); font-size: 13px; letter-spacing: -0.01em; }
+  .vf .flowdemo .node .ntitle { fill: var(--ink); font-family: var(--ui); font-size: 14px; font-weight: 500; }
+  .vf .flowdemo .node.on text, .vf .flowdemo .node.on .ntitle { fill: var(--on-primary); }
+  .vf .flowdemo .node .nsub { font-size: 12px; }
+  .vf .flowdemo .msg { fill: var(--primary); font-family: var(--code); font-size: 12px; font-weight: 500; letter-spacing: normal; }
+  .vf .flowdemo .wire { stroke: var(--hairline); stroke-width: 1.4; fill: none; }
+  .vf .flowdemo .wire.lit { stroke: var(--primary); stroke-width: 2.5; }
+  .vf .flowdemo .wlabel { fill: var(--body-mute); font-family: var(--ui); font-size: 12px; letter-spacing: -0.01em; }
+  .vf .flowdemo .zonebox { fill: var(--pearl); stroke: none; }
+  .vf .flowdemo .vfdot { fill: var(--primary); }
+  .vf .flowdemo .halo { fill: none; stroke: var(--primary); stroke-width: 1.5; opacity: .35; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .vf .flowdemo .node rect, .vf .flowdemo .wire, .vf .flowdemo .node text { transition: stroke var(--t), stroke-width var(--t), fill var(--t); }
+  }
+
+  .vf .flowdemo .stagewrap { border-top: 1px solid var(--divider); }
+
+  .vf .stagelog { list-style: none; margin: 0 auto; padding: 0; max-width: 760px; counter-reset: stg; }
+
+  .vf .stagelog li {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--divider);
+    opacity: .5;
+    transition: opacity var(--t);
+  }
+
+  .vf .stagelog li.on { opacity: 1; }
+  .vf .stagelog li:last-child { border-bottom: none; }
+
+  .vf .stagelog li::before {
+    grid-column: 1;
+    grid-row: 1;
+    counter-increment: stg;
+    content: counter(stg);
+    font-family: var(--ui);
+    font-size: 12px;
+    letter-spacing: -0.01em;
+    color: var(--body-mute);
+    background: var(--canvas);
+    border-radius: 4px;
+    text-align: center;
+    padding: 4px 0;
+    height: 24px;
+  }
+
+  .vf .stagelog li.on::before { color: var(--canvas); background: var(--ink); }
+
+  .vf .stagelog .st {
+    grid-column: 2;
+    font-family: var(--ui);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    display: block;
+  }
+
+  .vf .stagelog .sd {
+    grid-column: 2;
+    font-family: var(--code);
+    font-size: 12.5px;
+    line-height: 1.6;
+    letter-spacing: normal;
+    color: var(--body-mute);
+    display: block;
+    margin-top: 8px;
+    min-width: 0;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     배포 시연 — .flowdemo 를 그대로 쓰고 상태 표시만 덧붙인다.
+     초록 세트는 Blue/Green 의 어휘라 색이 곧 정보다. 그래서 여기서만
+     accent 하나 규칙을 벗어나되, 칩과 상태 줄에만 쓴다.
+     ══════════════════════════════════════════════════════════════════════ */
+  .vf .flowdemo .sline {
+    fill: var(--primary);
+    font-family: var(--ui);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .vf .flowdemo .sline.g { fill: var(--green); }
+  .vf .flowdemo .sline.x { fill: var(--bad); }
+
+  /* .node text · .node.on text 가 위 규칙보다 특이도가 높아 강조된 동안 색이
+     사라진다. 상태 줄의 색은 정보(초록 세트 / 실패)라 항상 유지돼야 한다. */
+  .vf #dep-root .node .sline { fill: var(--primary); }
+  .vf #dep-root .node.on .sline { fill: var(--on-primary); }
+  .vf #dep-root .node .sline.g, .vf #dep-root .node.on .sline.g { fill: var(--green); }
+  .vf #dep-root .node .sline.x, .vf #dep-root .node.on .sline.x { fill: var(--bad); }
+  .vf .flowdemo .chip { stroke: none; }
+  .vf .flowdemo .chip.b { fill: var(--primary); }
+  .vf .flowdemo .chip.g { fill: var(--green); }
+
+  /* 실패한 세트는 강조가 아니라 경고다 — .on 과 겹쳐도 이쪽이 이긴다 */
+  .vf .flowdemo .node.bad rect, .vf .flowdemo .node.bad.on rect {
+    fill: var(--bad);
+    stroke: none;
+  }
+  .vf .flowdemo .node.bad text, .vf .flowdemo .node.bad .ntitle, .vf .flowdemo .node.bad.on text, .vf .flowdemo .node.bad.on .ntitle { fill: #ffffff; }
+  .vf #dep-root .node.bad .sline, .vf #dep-root .node.bad.on .sline, .vf #dep-root .node.bad .sline.x, .vf #dep-root .node.bad.on .sline.x { fill: #ffffff; }
+
+  /* 아직 트래픽이 흐르지 않는 경로. 회색 실선(구조선)과도 구별돼야 한다 */
+  .vf .flowdemo .wire.dim {
+    stroke: var(--hairline);
+    stroke-dasharray: 5 5;
+    stroke-width: 1;
+    opacity: .7;
+  }
+
+  /* 시나리오 둘 — 2차 버튼이므로 흰 면에 Graphite */
+  .vf .demo-bar button.ghost {
+    color: var(--body);
+    background: var(--canvas);
+    border: none;
+  }
+
+  .vf .demo-bar button.ghost:hover { background: var(--pearl); }
+  /* 익명 요청 제한 시연 */
+  .vf #lim-root .lim-key { font-family: var(--code, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 13px; color: var(--body-muted); word-break: break-all; margin: 0 0 16px; }
+  .vf #lim-root .lim-count { font-size: 48px; font-weight: 600; letter-spacing: -.03em; line-height: 1; color: var(--ink); margin: 0 0 8px; }
+  .vf #lim-root .lim-count small { font-size: 16px; font-weight: 500; color: var(--body-muted); margin-left: 8px; letter-spacing: 0; }
+  .vf #lim-root .lim-ttl { font-size: 14px; color: var(--body-muted); margin: 0 0 20px; line-height: 1.5; }
+  .vf #lim-root .lim-slots { display: flex; gap: 6px; flex-wrap: wrap; }
+  .vf #lim-root .lim-slots span { width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--hairline); background: var(--canvas); transition: background var(--t, .2s) ease-out; }
+  .vf #lim-root .lim-slots span.f { background: var(--ink); border-color: var(--ink); }
+  .vf #lim-root.over .lim-slots span.f { background: var(--primary); border-color: var(--primary); }
+  .vf #lim-root .lim-loghead { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .vf #lim-root .lim-clear { font: inherit; font-size: 12px; line-height: 1; padding: 6px 12px; border-radius: 9999px; border: 1px solid var(--hairline); background: transparent; color: var(--body-muted); cursor: pointer; }
+  .vf #lim-root .lim-clear:hover { color: var(--ink); background: var(--canvas); }
+  .vf #lim-root .lim-clear:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 2px; }
+  /* 로그는 쌓이게 두고 창 높이만 고정한다. 오래된 줄을 버리면 시연 순서를 되짚을 수 없다 */
+  .vf #lim-root .lim-logbox { max-height: 288px; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: var(--hairline) transparent; }
+  .vf #lim-root .lim-logbox::-webkit-scrollbar { width: 6px; }
+  .vf #lim-root .lim-logbox::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 3px; }
+  .vf #lim-root .demo-bar button { min-width: 0; }
+  @media (max-width: 560px) {
+    /* 버튼 넷이 한 줄에 하나씩 쌓이면 시연 바가 카운터보다 길어진다. 라벨은 한 줄, 버튼은 2열 */
+    .vf #lim-root .demo-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .vf #lim-root .demo-bar label { grid-column: 1 / -1; }
+    .vf #lim-root .demo-bar button { padding-left: 8px; padding-right: 8px; white-space: nowrap; }
+    .vf #lim-root .demo-pane { padding: 24px 20px; }
+    /* 22px 칸 10개는 320px 폭에서 9+1 로 꺾인다 */
+    .vf #lim-root .lim-slots { gap: 4px; }
+    .vf #lim-root .lim-slots span { width: 18px; height: 18px; }
+    .vf #lim-root .lim-logbox { max-height: 240px; }
+  }
+  .vf #lim-root .lim-log { list-style: none; margin: 0; padding: 0; font-size: 14px; line-height: 1.55; }
+  .vf #lim-root .lim-log li { display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--divider); }
+  .vf #lim-root .lim-log li:last-child { border-bottom: none; }
+  .vf #lim-root .lim-log li.empty { display: block; color: var(--body-muted); }
+  .vf #lim-root .lim-log .c { font-family: var(--code, ui-monospace, SFMono-Regular, Menlo, monospace); font-weight: 600; color: var(--ink); }
+  .vf #lim-root .lim-log .c.bad { color: var(--primary); }
+  .vf #lim-root .lim-log .c.dim { color: var(--body-muted); font-weight: 500; }
+
+  /* 시나리오에 맞는 단계 설명만 남긴다. display:none 이라 번호도 건너뛴다 */
+  .vf #dep-root:not(.fail) .stagelog li[data-var="bad"], .vf #dep-root.fail .stagelog li[data-var="ok"] { display: none; }
+
+  /* 요청 경로 시연 — 세 경로를 고르는 토글 */
+  .vf .demo-bar button.opt {
+    color: var(--body);
+    background: var(--canvas);
+    border: none;
+  }
+
+  .vf .demo-bar button.opt:hover { background: var(--pearl); }
+
+  .vf .demo-bar button.opt[aria-pressed="true"] {
+    color: var(--on-primary);
+    background: var(--primary);
+  }
+
+  /* 고른 경로의 단계만 남긴다. display:none 이라 번호도 건너뛴다 */
+  .vf #req-root .stagelog li[data-var] { display: none; }
+  .vf #req-root.v-fe .stagelog li[data-var="fe"], .vf #req-root.v-api .stagelog li[data-var="api"], .vf #req-root.v-rt .stagelog li[data-var="rt"] { display: grid; }
+
+  /* 하네스 시연 — 권한 경계를 존 박스로 나눈다 */
+  .vf #hn-root .zonelabel {
+    fill: var(--body-mute);
+    font-family: var(--ui);
+    font-size: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .vf #hn-root .zonelabel.deny { fill: var(--bad); }
+
+  .vf #hn-root .stagelog li[data-var] { display: none; }
+  .vf #hn-root.v-rej .stagelog li[data-var="rej"], .vf #hn-root.v-pass .stagelog li[data-var="ok"], .vf #hn-root.v-fail .stagelog li[data-var="ok"], .vf #hn-root.v-pass .stagelog li[data-var="pass"], .vf #hn-root.v-fail .stagelog li[data-var="fail"] { display: grid; }
+  /* ── 단독 HTML 전용 — 아티팩트 호스트가 제공하던 부분을 대체한다 ─────── */
+  
+
+  /* 2차 CTA — 흰 면에 Graphite, 4px 모서리, 색만 바뀐다 */
+  
+
+  
+  
+
+  
+
+  /* 인쇄·PDF — 탭은 화면 장치이므로 전부 펼치고, 회색 면은 흰 지면으로 돌린다 */
+  @media print {
+    
+    .vf .tabbar-outer { display: none; }
+    .vf [role="tabpanel"][hidden] { display: block !important; }
+    .vf [role="tabpanel"] + [role="tabpanel"] { break-before: page; }
+    .vf figure, .vf table, .vf .stats, .vf .dec, .vf .branches, .vf .roles, .vf .idcard, .vf .demo { break-inside: avoid; }
+    .vf .bleed { margin-left: 0; margin-right: 0; width: auto; }
+    .vf figure { padding: 24px 0; }
+    
+    
+  }
+  @media print{
+    .vf{
+      --canvas:#ffffff; --parchment:#ffffff; --pearl:#ffffff; --chip:#ffffff;
+      --ink:#000000; --body:#222222; --body-muted:#444444; --body-mute:#444444;
+      --faint:#666666; --hairline:#cccccc; --divider:#dddddd;
+      --primary:#0066cc; --on-primary:#ffffff;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     VICTORYFAIRY DEEP DIVE — APPLE SKIN
+     The deep-dive stylesheet above was authored against a Tesla-derived
+     design language (normal tracking, 400/500 only, no shadows, 0/4/12px
+     radii). It is entirely token-driven, so this layer re-points those
+     tokens at the portfolio's Apple palette and then restyles the handful
+     of surfaces where the two languages actually disagree: type scale,
+     corner radius, and the pill/segmented controls.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  .vf{
+    /* tokens the deep dive needs that the host page does not define */
+    --body-mute:var(--body-muted);
+    --faint:var(--body-muted);
+    --on-primary:#ffffff;
+    --primary-hover:#0071e3;
+    --green:#1d7f4a;
+    --bad:#c9362c;
+    /* Ash sits one step above the card face — the host's --pearl is lighter
+       than --parchment, which inverts the deep dive's surface hierarchy */
+    --pearl:#ebebef;
+    --display:-apple-system,system-ui,"SF Pro Display","SF Pro Text","Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    --ui:-apple-system,system-ui,"SF Pro Text","SF Pro Display","Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    --code:ui-monospace,"SF Mono","Cascadia Mono",Consolas,"Menlo",monospace;
+    --t:.2s;
+    --ease:cubic-bezier(.4,0,.2,1);
+
+    /* Every diagram — static figure and animated demo alike — is drawn on three
+       surfaces that have to stay distinct: the panel it sits on, the recessed
+       zone boxes, and the raised nodes. Light stacks them the way the source
+       did (recessed darker, raised white). Dark follows Apple's elevation
+       model, where a raised surface is lighter — leaving the node on --canvas
+       there would sink it into the panel, which is what made the boxes vanish. */
+    --dia-ground:var(--parchment);
+    --dia-zone:var(--pearl);
+    --dia-node:var(--canvas);
+
+    font-family:var(--ui);
+    font-size:15px;
+    line-height:1.47;
+    letter-spacing:-.01em;
+    color:var(--body);
+  }
+
+  /* Apple keeps one blue in light and lifts it on dark grounds */
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]) .vf{
+      --primary:var(--primary-on-dark);
+      --primary-hover:#4aa8ff;
+      --primary-focus:var(--primary-on-dark);
+      --pearl:#2a2a2c;
+      --faint:#6e6e73;
+      --green:#4cd07d;
+      --bad:#ff7a6e;
+      --dia-ground:#1c1c1e; --dia-zone:#131315; --dia-node:#2f2f31;
+    }
+  }
+  :root[data-theme="dark"] .vf{
+    --primary:var(--primary-on-dark);
+    --primary-hover:#4aa8ff;
+    --primary-focus:var(--primary-on-dark);
+    --pearl:#2a2a2c;
+    --faint:#6e6e73;
+    --green:#4cd07d;
+    --bad:#ff7a6e;
+    --dia-ground:#1c1c1e; --dia-zone:#131315; --dia-node:#2f2f31;
+  }
+
+  /* ---------- Sub-tab bar: Apple segmented control ---------- */
+  /* sits under the 44px global nav + 52px sub nav */
+  .vf .tabbar-outer{
+    position:sticky; top:96px; z-index:30;
+    background:color-mix(in srgb,var(--canvas) 82%,transparent);
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid var(--divider);
+    margin-bottom:56px;
+  }
+  .vf .tabbar{
+    gap:2px; padding:10px 12px; justify-content:flex-start;
+    max-width:var(--maxw); margin:0 auto;
+  }
+  /* 탭이 열 개라 14px·16px 패딩이면 1120px 컨테이너를 넘쳐 마지막 탭이 숨는다 */
+  .vf .tabbar button{
+    font-family:var(--ui);
+    font-size:13.5px; font-weight:500; letter-spacing:-.016em;
+    border-radius:9999px; padding:9px 10px; min-height:0;
+    color:var(--body-muted); background:transparent;
+    transition:background var(--t) ease,color var(--t) ease;
+  }
+  .vf .tabbar button .n{
+    font-size:11px; font-weight:600; letter-spacing:.06em;
+    margin-right:5px; color:var(--body-muted);
+  }
+  .vf .tabbar button:hover{background:var(--chip); color:var(--ink);}
+  .vf .tabbar button[aria-selected="true"]{
+    background:var(--primary); color:#fff;
+  }
+  .vf .tabbar button[aria-selected="true"] .n{color:rgba(255,255,255,.72);}
+  .vf .tabbar button:focus-visible{outline:2px solid var(--primary-focus); outline-offset:2px;}
+
+  /* ---------- Type ---------- */
+  .vf .panel-head{margin-bottom:44px; text-align:left;}
+  .vf .panel-head h2{
+    font-family:var(--display);
+    font-size:clamp(24px,3.4vw,34px); font-weight:600;
+    line-height:1.2; letter-spacing:-.011em; color:var(--ink);
+    padding:0; border:0; margin:0;
+  }
+  .vf .panel-head .sub{
+    font-size:clamp(17px,1.9vw,21px); font-weight:400; line-height:1.35;
+    letter-spacing:.007em; color:var(--body-muted); margin:14px 0 0; max-width:46ch;
+  }
+  .vf h3{
+    font-family:var(--display);
+    font-size:21px; font-weight:600; line-height:1.24; letter-spacing:-.021em;
+    color:var(--ink); margin:52px 0 16px;
+  }
+  .vf h4.sec{
+    font-size:14px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--primary); margin:64px 0 18px; padding:0; border:0;
+  }
+  .vf h5{font-family:var(--display); letter-spacing:-.018em;}
+  .vf p{font-size:15px; line-height:1.62; letter-spacing:-.012em; margin:0 0 16px;}
+  .vf .lede{
+    font-size:clamp(18px,2vw,21px); font-weight:400; line-height:1.42;
+    letter-spacing:.004em; color:var(--body-muted);
+  }
+  .vf ul.plain li{font-size:15px; line-height:1.62; letter-spacing:-.012em;}
+  .vf strong{font-weight:600; color:var(--ink);}
+  .vf code{
+    font-family:var(--code); font-size:.88em; letter-spacing:0;
+    background:var(--chip); color:var(--ink);
+    border-radius:6px; padding:2px 6px; border:0;
+  }
+  .vf a{color:var(--primary);}
+
+  /* ---------- Cards ---------- */
+  .vf .role,
+  .vf .dec,
+  .vf .stat,
+  .vf .branches button,
+  .vf .warnbox,
+  .vf .snippet,
+  .vf .idcard div{
+    border-radius:18px;
+    border:1px solid var(--hairline);
+    background:var(--canvas);
+  }
+  .vf .role,.vf .dec,.vf .stat,.vf .branches button{padding:28px;}
+  .vf .warnbox{padding:24px 26px; border-left:1px solid var(--hairline); background:var(--parchment);}
+  .vf .snippet{padding:20px 22px; background:var(--parchment); font-family:var(--code); letter-spacing:0;}
+
+  .vf .role h5,.vf .dec h5{
+    font-size:19px; font-weight:600; letter-spacing:-.02em; color:var(--ink);
+    margin:0 0 12px; padding:0; border:0;
+  }
+  .vf .role .rk,.vf .dec .tag,.vf .branches .k{
+    display:inline-block; font-size:12px; font-weight:600;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--primary);
+    background:none; border:0; padding:0; margin:0 0 14px;
+  }
+  .vf .role p,.vf .dec p,.vf .branches .d{font-size:15px; line-height:1.55;}
+  .vf .role .rmetric{
+    display:inline-block; margin-top:16px;
+    font-size:13px; font-weight:500; letter-spacing:-.01em;
+    color:var(--primary); background:color-mix(in srgb,var(--primary) 10%,transparent);
+    border:0; border-radius:9999px; padding:6px 13px;
+  }
+  .vf .branches .ttl{
+    font-family:var(--display); font-size:19px; font-weight:600;
+    letter-spacing:-.02em; color:var(--ink); margin:0 0 10px; display:block;
+  }
+  .vf .branches .go{
+    font-size:14px; font-weight:500; letter-spacing:-.016em;
+    color:var(--primary); margin-top:16px; display:block;
+  }
+  .vf .branches button{text-align:left; cursor:pointer; transition:transform .12s ease;}
+  .vf .branches button:hover{background:var(--canvas); transform:translateY(-2px);}
+
+  /* ---------- Stats ---------- */
+  .vf .stat .lbl{
+    font-size:13px; font-weight:400; letter-spacing:-.01em;
+    color:var(--body-muted); text-transform:none;
+  }
+  .vf .stat .val{
+    font-family:var(--display);
+    font-size:clamp(34px,4.4vw,44px); font-weight:600;
+    letter-spacing:-.028em; line-height:1.05; color:var(--ink);
+  }
+  .vf .stat .val .u{font-size:19px; letter-spacing:-.01em;}
+  .vf .stat.vfhero .val{color:var(--primary);}
+  .vf .stat .note{font-size:13px; line-height:1.5; letter-spacing:-.01em; color:var(--body-muted);}
+
+  /* provenance pills — 실측 / 환산 / 설계값 */
+  .vf .pv{
+    border-radius:9999px; padding:3px 10px;
+    font-size:11px; font-weight:600; letter-spacing:.02em; text-transform:none;
+  }
+  .vf .pv.m{background:var(--primary); color:#fff; border:1px solid transparent;}
+  .vf .pv.c{background:transparent; color:var(--primary); border:1px solid color-mix(in srgb,var(--primary) 35%,transparent);}
+  .vf .pv.s{background:var(--chip); color:var(--body-muted); border:1px solid transparent;}
+
+  /* ---------- Tables ---------- */
+  .vf .tw{margin:26px 0 8px;}
+  .vf table{font-size:15px; letter-spacing:-.012em;}
+  .vf th{
+    font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--body-muted); border-bottom:1px solid var(--hairline); padding-bottom:12px;
+  }
+  .vf td{border-bottom:1px solid var(--divider); line-height:1.55;}
+  .vf td.mono,.vf th.mono{font-family:var(--code); font-size:13px; letter-spacing:0;}
+  .vf caption{
+    font-size:13px; letter-spacing:-.01em; color:var(--body-muted);
+    text-transform:none; font-weight:400;
+  }
+  .vf .chip{border-radius:9999px; font-size:12px; font-weight:600; letter-spacing:.02em; padding:3px 10px;}
+  .vf .chip.ok{background:var(--primary); color:#fff;}
+  .vf .chip.no{background:var(--chip); color:var(--body-muted);}
+
+  /* ---------- Figures ---------- */
+  /* Static diagrams use the same three surfaces as the animated ones. */
+  .vf figure{background:var(--dia-ground); padding:48px 0;}
+  .vf svg .box{fill:var(--dia-node); stroke:var(--hairline); stroke-width:1;}
+  .vf svg .box-d{fill:var(--dia-node);}
+  .vf figure.vfhero{padding:56px 0;}
+  .vf figcaption{
+    font-size:14px; line-height:1.5; letter-spacing:-.016em;
+    color:var(--body-muted); max-width:62ch; margin:26px auto 0; padding:0 22px;
+  }
+  .vf figure svg .box{rx:8;}
+  .vf svg .t,.vf svg .t-b,.vf svg .t-s,.vf svg .t-z{letter-spacing:-.01em;}
+
+  /* ---------- Identity card ---------- */
+  .vf .idcard div{padding:22px 24px;}
+  .vf .idcard dt{
+    font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--body-muted); margin-bottom:8px;
+  }
+  .vf .idcard dd{font-size:16px; font-weight:600; letter-spacing:-.018em; color:var(--ink);}
+  .vf .idcard dd .sub2{font-size:13px; font-weight:400; letter-spacing:-.01em; color:var(--body-muted);}
+
+  /* ---------- Interactive demos ---------- */
+  .vf .demo{
+    border:0; border-radius:18px; overflow:hidden;
+    background:var(--dia-ground);
+    box-shadow:var(--shadow-product);
+  }
+  .vf .demo-pane{background:var(--dia-ground);}
+  .vf .flowdemo .demo-pane{background:transparent;}
+  /* A fill step alone separates the boxes by only ~1.1:1, so each resting node
+     also carries a hairline. The .on / .bad states keep their own stroke:none —
+     they are already carried by colour and should not read as outlined. */
+  .vf .flowdemo .node rect,
+  .vf .flowdemo .node.done rect{
+    fill:var(--dia-node);
+    stroke:var(--hairline);
+    stroke-width:1;
+  }
+  .vf .flowdemo .zonebox{fill:var(--dia-zone);}
+
+  .vf .demo-bar{background:var(--canvas); border-bottom:1px solid var(--divider); padding:20px 24px;}
+  .vf .demo-bar label{font-size:14px; letter-spacing:-.016em; color:var(--body-muted);}
+  .vf .demo-bar input{
+    font-family:var(--ui); font-size:15px; letter-spacing:-.012em;
+    border-radius:9999px; border:1px solid var(--hairline);
+    background:var(--canvas); color:var(--ink); padding:10px 18px;
+  }
+  .vf .demo-bar button{
+    font-family:var(--ui); font-size:15px; font-weight:400; letter-spacing:-.022em;
+    border-radius:9999px; padding:10px 22px; min-height:0;
+    background:var(--primary); color:#fff; border:1px solid transparent;
+    transition:transform .12s ease,background var(--t) ease;
+  }
+  .vf .demo-bar button:active{transform:scale(.95);}
+  .vf .demo-bar button.ghost,
+  .vf .demo-bar button.opt{
+    background:transparent; color:var(--primary);
+    border:1px solid var(--primary);
+  }
+  .vf .demo-bar button.ghost:hover,
+  .vf .demo-bar button.opt:hover{background:color-mix(in srgb,var(--primary) 10%,transparent);}
+  .vf .demo-bar button.opt[aria-pressed="true"]{background:var(--primary); color:#fff;}
+  .vf .demo-presets .preset{
+    border-radius:9999px; font-family:var(--code); font-size:12px; letter-spacing:0;
+    border:1px solid var(--hairline); background:var(--canvas); color:var(--body-muted);
+    padding:6px 13px;
+  }
+  .vf .demo-presets .preset:hover{background:var(--primary); color:#fff; border-color:transparent;}
+  .vf .demo-pane h5{
+    font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--body-muted); margin:0 0 22px;
+  }
+  .vf .step-head .num{border-radius:9999px; font-size:11px; font-weight:600; letter-spacing:.02em;}
+  .vf .step-head .step-title{font-size:15px; font-weight:600; letter-spacing:-.016em; color:var(--ink);}
+  .vf .ch{border-radius:6px; font-family:var(--code); letter-spacing:0;}
+  .vf .result .rlabel,.vf .result .viewlabel{
+    font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--body-muted);
+  }
+  .vf .result .final{border-radius:12px; font-family:var(--code); letter-spacing:0;}
+  .vf .result .vfbadge,.vf .viewchip{border-radius:9999px; font-size:12px; letter-spacing:-.01em;}
+  .vf .result .vfbadge.block{background:var(--bad); color:#fff;}
+  .vf .stagelog li::before{border-radius:9999px; font-size:11px; font-weight:600;}
+  .vf .stagelog li.on::before{background:var(--primary); color:#fff;}
+  .vf .stagelog .st{font-size:15px; font-weight:600; letter-spacing:-.016em; color:var(--ink);}
+  .vf .stagelog .sd{font-size:13.5px; line-height:1.5; letter-spacing:-.01em; color:var(--body-muted);}
+  .vf .flowdemo .node rect{rx:8;}
+
+  /* ---------- POOKIE 시연 — 큐 슬롯 ---------- */
+  .vf #mq-root .slot rect{fill:var(--dia-node); stroke:var(--hairline); stroke-width:1; stroke-dasharray:4 4; transition:fill var(--t), stroke var(--t);}
+  .vf #mq-root .slot.full rect{stroke-dasharray:none; stroke:var(--primary); stroke-width:1.5;}
+  .vf #mq-root .slot.front rect{fill:var(--primary);}
+  .vf #mq-root .slot text{fill:var(--ink); font-family:var(--code); font-size:11px; font-weight:600; letter-spacing:0;}
+  .vf #mq-root .slot.front text{fill:#fff;}
+  .vf #mq-root .slot .r{font-size:9.5px; font-weight:500;}
+  .vf #pookie-demos h4.sec + p{color:var(--body-muted); font-size:15px; line-height:1.6; margin:0 0 8px;}
+
+  /* ---------- 연금술사 시연 — 문서 벡터 점 · Top 5 ---------- */
+  .vf #yeon-demos h4.sec + p{color:var(--body-muted); font-size:15px; line-height:1.6; margin:0 0 8px;}
+  .vf #rag-root .dot{fill:var(--hairline); transition:fill .22s, opacity .22s;}
+  .vf #rag-root .dot.scan{fill:var(--ink); transition:none;}
+  .vf #rag-root .dot.hit{fill:var(--primary);}
+  .vf #rag-root .dot.miss{fill:var(--hairline); opacity:.3;}
+  .vf #rag-root .dot.top{fill:var(--green);}
+  .vf #rag-root .trow rect{fill:var(--dia-node); stroke:var(--hairline); stroke-width:1; stroke-dasharray:4 4; transition:fill var(--t);}
+  .vf #rag-root .trow.on rect{fill:var(--green); stroke:none;}
+  .vf #rag-root .trow text{fill:var(--body-muted); font-family:var(--code); font-size:11px; font-weight:600; letter-spacing:0;}
+  .vf #rag-root .trow.on text{fill:#fff;}
+
+  /* ---------- 주소 검색 시연 — 후보 점 · n-gram 칩 · Top-5 ---------- */
+  .vf #address-demos h4.sec + p{color:var(--body-muted); font-size:15px; line-height:1.6; margin:0 0 8px;}
+  .vf #ab-root .dot{fill:var(--hairline); transition:fill .22s, opacity .22s;}
+  .vf #ab-root .dot.scan{fill:var(--ink); transition:none;}
+  .vf #ab-root .dot.hit{fill:var(--primary);}
+  .vf #ab-root .dot.miss{fill:var(--hairline); opacity:.3;}
+  .vf #ab-root .dot.top{fill:var(--green);}
+  .vf #ab-root .trow rect{fill:var(--dia-node); stroke:var(--hairline); stroke-width:1; stroke-dasharray:4 4; transition:fill var(--t);}
+  .vf #ab-root .trow.on rect{fill:var(--green); stroke:none;}
+  .vf #ab-root .trow text{fill:var(--body-muted); font-family:var(--code); font-size:11px; font-weight:600; letter-spacing:0;}
+  .vf #ab-root .trow.on text{fill:#fff;}
+  .vf #ab-root .gram rect{fill:var(--dia-node); stroke:var(--hairline); stroke-width:1; opacity:0; transition:fill .2s, opacity .2s;}
+  .vf #ab-root .gram text{fill:var(--body-muted); font-family:var(--code); font-size:11px; font-weight:600; letter-spacing:0; opacity:0; transition:opacity .2s;}
+  .vf #ab-root .gram.show rect, .vf #ab-root .gram.show text{opacity:1;}
+  .vf #ab-root .gram.show.on rect{fill:var(--primary); stroke:none;}
+  .vf #ab-root .gram.show.on text{fill:#fff;}
+  .vf #ab-root .gram.show.bad rect{stroke:var(--bad); stroke-dasharray:3 3;}
+  .vf #ab-root .gram.show.bad text{fill:var(--bad); text-decoration:line-through;}
+  .vf #ab-root .node .q{fill:var(--ink); font-family:var(--code); font-size:12px; font-weight:600; letter-spacing:0;}
+  .vf #ab-root .node .q .e{fill:var(--bad);}
+  .vf #ab-root .node.on .q, .vf #ab-root .node.on .q .e{fill:var(--on-primary);}
+
+  /* ---------- onAiR 시연 — 캔버스 ---------- */
+  .vf #onair-demos h4.sec + p{color:var(--body-muted); font-size:15px; line-height:1.6; margin:0 0 8px;}
+  .vf #ar-root canvas{width:100%; max-width:760px; display:block; margin:0 auto; border-radius:10px; background:#000; cursor:crosshair;}
+  .vf #ar-root svg{display:none;}
+  .vf #ar-root .ar-status{margin:14px auto 0; max-width:760px; font-family:var(--code); font-size:12.5px; letter-spacing:0; color:var(--body-muted); text-align:center;}
+
+  /* ---------- 시연 조작부 — ① 고르기 → ② 재생 ---------- */
+  .vf .demo-bar--steps{flex-direction:column; align-items:stretch; gap:12px;}
+  .vf .dstep{display:flex; flex-wrap:wrap; align-items:center; gap:10px;}
+  .vf .dnum{display:inline-flex; width:22px; height:22px; border-radius:9999px; background:var(--ink); color:var(--canvas); font-size:11px; font-weight:700; align-items:center; justify-content:center; flex:none;}
+  .vf .dlabel{font-size:14px; color:var(--body-muted); margin-right:6px; min-width:96px;}
+  .vf .demo-bar button.run{background:var(--ink); color:var(--canvas); border-color:transparent;}
+  .vf .demo-bar button.run:hover{background:var(--body);}
+  .vf .demo-bar button.next{font-weight:600;}
+  .vf .dhint{margin:0; font-size:12.5px; color:var(--body-muted); line-height:1.5;}
+
+  /* ---------- 단계 로그 → 셸 로그 ----------
+     설명 목록이 시연보다 커 보이지 않도록, 도달한 단계만 터미널처럼 한 줄씩 찍는다.
+     .seen 은 아래 관찰자 스크립트가 .on 을 보고 붙인다. 승리요정 시연에도 그대로 적용된다. */
+  .vf .stagewrap{padding:24px;}
+  .vf .stagelog{max-width:none; background:#0d0d0f; color:#d6d6dc; border-radius:10px; padding:14px 16px; font-family:var(--code); font-size:12.5px; line-height:1.55; letter-spacing:0; min-height:56px; max-height:280px; overflow:auto; counter-reset:stg;}
+  .vf .stagelog::before{content:"$ 대기 중 — 재생하면 처리 로그가 여기에 찍힙니다"; display:block; color:#6e6e76;}
+  .vf .stagelog:has(li.seen, li.on)::before{display:none;}
+  .vf .stagelog li{display:block; grid-template-columns:none; gap:0; padding:5px 0; margin:0; border:0; opacity:1; transition:none;}
+  /* 아직 도달하지 않은 줄은 display:none 이 아니라 접어 둔다 — 시연 스크립트가 offsetParent 로
+     '보이는 줄'을 세므로 흐름에서 빼면 안 된다 */
+  .vf .stagelog li:not(.seen):not(.on){height:0; padding:0; overflow:hidden; opacity:0;}
+  /* 시나리오별 줄 고르기(요청 경로·하네스·배포)는 display:grid 로 켜므로 여기서 block 으로 되돌린다 */
+  .vf #req-root.v-fe .stagelog li[data-var="fe"], .vf #req-root.v-api .stagelog li[data-var="api"], .vf #req-root.v-rt .stagelog li[data-var="rt"],
+  .vf #hn-root.v-rej .stagelog li[data-var="rej"], .vf #hn-root.v-pass .stagelog li[data-var="ok"], .vf #hn-root.v-fail .stagelog li[data-var="ok"],
+  .vf #hn-root.v-pass .stagelog li[data-var="pass"], .vf #hn-root.v-fail .stagelog li[data-var="fail"],
+  .vf #dep-root:not(.fail) .stagelog li[data-var="ok"], .vf #dep-root.fail .stagelog li[data-var="bad"]{display:block;}
+  .vf .stagelog li::before{display:inline; counter-increment:stg; content:"$ step " counter(stg) "  "; background:none; color:#6e6e76; padding:0; height:auto; border-radius:0; font:inherit; font-weight:600;}
+  .vf .stagelog li.on::before{background:none; color:var(--primary-on-dark, #2997ff);}
+  .vf .stagelog .st{display:inline; font:inherit; font-weight:600; letter-spacing:0; color:#e8e8ee;}
+  .vf .stagelog li.on .st::after{content:" ▍"; color:var(--primary-on-dark, #2997ff); animation:pk-blink 1s steps(1) infinite;}
+  /* 누적으로 .on 을 남기는 시연에서는 마지막 줄에만 커서·강조를 둔다 */
+  .vf .stagelog li.on:has(~ li.on) .st::after{content:none;}
+  .vf .stagelog li.on:has(~ li.on)::before{color:#6e6e76;}
+  .vf .stagelog .sd{display:block; margin:2px 0 0 0; padding-left:2ch; font:inherit; font-size:12px; letter-spacing:0; color:#8e8e96; text-indent:0;}
+  .vf .stagelog .sd::before{content:"# "; color:#5a5a62;}
+  @keyframes pk-blink{50%{opacity:0;}}
+  @media (prefers-reduced-motion:reduce){.vf .stagelog li.on .st::after{animation:none;}}
+
+  /* ---------- Floating table of contents ---------- */
+  /* The host page reads at 1120px, not the deep dive's original 980px, so the
+     rail has to move further out — and only appears once there is room for it. */
+  @media (max-width:1499px){
+    .vf #toc[data-show="1"]{display:none;}
+  }
+  .vf #toc{
+    left:calc(50% - 736px);
+    top:180px; max-height:calc(100vh - 220px);
+    background:color-mix(in srgb,var(--canvas) 86%,transparent);
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-radius:18px; border:1px solid var(--hairline); padding:16px 10px;
+  }
+  .vf #toc .toc-label{
+    font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--body-muted); padding:0 12px 10px;
+  }
+  .vf #toc a{
+    font-size:13px; letter-spacing:-.012em; color:var(--body-muted);
+    border-radius:9999px; padding:7px 12px; border:0;
+  }
+  .vf #toc a:hover{background:var(--chip); color:var(--ink);}
+  .vf #toc a[aria-current="true"]{color:var(--primary); font-weight:600; background:transparent; border:0;}
+
+  /* Full-bleed figures were sized with 100vw, which counts the scrollbar and
+     so overshoots the page by its width. --sbw is measured once at load. */
+  .vf .bleed{
+    width:calc(100vw - var(--sbw,0px));
+    margin-left:calc(50% - 50vw + var(--sbw,0px) / 2);
+    margin-right:calc(50% - 50vw + var(--sbw,0px) / 2);
+  }
+
+  /* Four role cards read as 2x2, not 3-then-1 */
+  @media (min-width:900px){
+    .vf .roles{grid-template-columns:repeat(2,1fr);}
+  }
+
+  /* ---------- Panel rhythm ---------- */
+  .vf{background:var(--canvas); padding-bottom:96px;}
+  .vf .vfwrap{width:100%; max-width:var(--maxw); margin:0 auto; padding:0 22px;}
+  .vf [role="tabpanel"]{padding-bottom:24px;}
+  .vf [role="tabpanel"] > .panel-head:first-child{margin-top:0;}
+  .vf [role="tabpanel"] > *:first-child{margin-top:0;}
+  .vf .col{max-width:none;}
+  .vf .col p,.vf .col ul{max-width:70ch;}
+
+  @media (max-width:900px){
+    .vf .tabbar-outer{top:96px; margin-bottom:36px;}
+    .vf .tabbar{padding:8px 0;}
+    .vf h3{margin-top:40px;}
+    .vf h4.sec{margin-top:48px;}
+  }
+  /* ---------- 주소 검색 벤치마크 — Intro·Contribution 삽화 ---------- */
+  .abfig{width:100%; height:auto; display:block; border-radius:18px; background:var(--parchment);}
+  .abfig text{font-family:inherit; font-size:13px; fill:var(--body-muted); letter-spacing:-.01em;}
+  .abfig .k{fill:var(--ink); font-weight:600;}
+  .abfig .hi{fill:var(--primary); font-weight:600;}
+  .abfig .mono{font-family:ui-monospace,"SF Mono","Cascadia Mono",Consolas,Menlo,monospace; font-size:12.5px;}
+  .abfig .box{fill:var(--canvas); stroke:var(--hairline);}
+  .abfig .bar{fill:var(--canvas); stroke:var(--hairline);}
+  .abfig .bar.on{fill:var(--primary); stroke:none;}
+  .abfig .chip{fill:var(--canvas); stroke:var(--hairline);}
+  .abfig .chip.on{fill:var(--primary); stroke:none;}
+  .abfig .chip.on + text{fill:#fff;}
+  .contrib__img .abfig{border-radius:0; background:var(--canvas);}
+  /* 채팅 v1/v2 전환 — 탭 안의 하위 버전. hidden 이 display 지정에 지지 않도록 명시한다 */
+  .vf .chatver[hidden], .vf .stagelog[hidden] { display: none !important; }
+  .vf .demo-bar.verbar { padding: 0 0 8px; }
+  .vf pre.code { background:#0d0d0f; color:#d6d6dc; border-radius:10px; padding:16px 18px; overflow-x:auto;
+    font-family:var(--code); font-size:12.5px; line-height:1.6; letter-spacing:0; margin:16px 0 24px; max-width:none; }
+  .vf pre.code code { background:none; color:inherit; padding:0; font-size:inherit; }
+</style>
+</head>
+<body>
+
+<!-- ============ GLOBAL NAV ============ -->
+<nav class="gnav">
+  <div class="gnav__inner">
+    <a href="https://parkjaehwan-906.github.io/Portfolio/" class="gnav__brand">박재환</a>
+    <a href="https://parkjaehwan-906.github.io/Portfolio/#about">소개</a>
+    <a href="https://parkjaehwan-906.github.io/Portfolio/#skills">역량</a>
+    <a href="https://parkjaehwan-906.github.io/Portfolio/#projects">전체 프로젝트</a>
+    <span class="gnav__spacer"></span>
+    <a href="https://github.com/ParkJaeHwan-906" target="_blank" rel="noopener">GitHub</a>
+    <button class="theme-toggle" id="themeBtn" aria-label="테마 전환">라이트/다크</button>
+  </div>
+</nav>
+
+<!-- ============ SUB NAV ============ -->
+<div class="subnav">
+  <div class="subnav__inner">
+    <span class="subnav__title">주소 검색 벤치마크</span>
+    <span class="subnav__spacer"></span>
+    <div class="subnav__links">
+      <a href="https://parkjaehwan-906.github.io/portfolio-victoryfairy/">승리요정</a>
+      <a href="https://parkjaehwan-906.github.io/portfolio-pookie/">POOKIE</a>
+      <a href="https://parkjaehwan-906.github.io/portfolio-yeon/">연금술사</a>
+      <a href="https://parkjaehwan-906.github.io/portfolio-onair/">onAiR</a>
+      <a href="https://parkjaehwan-906.github.io/portfolio-address-search/" aria-current="page">주소 검색 벤치마크</a>
+      <a href="https://parkjaehwan-906.github.io/portfolio-ieum/">이음</a>
+    </div>
+    <a class="btn btn--primary" style="padding:8px 18px;font-size:14px" href="mailto:doormoo2@naver.com">Contact</a>
+  </div>
+</div>
+
+<script>
+  // ── POOKIE 시연 공용 엔진 ─────────────────────────────────────────────
+  // 승리요정 채팅 시연과 같은 방식이다. 노드 강조·와이어 점등·점 이동을
+  // 단계 배열로 기술하고, 단계마다 로그 한 줄을 켠다.
+  // 자동 재생(play)과 한 단계씩(step) 두 가지로 돌릴 수 있다.
+  window.pkFlow = function (ROOT, svgId, logId, progId) {
+    const svg = ROOT.querySelector('#' + svgId);
+    const log = ROOT.querySelector('#' + logId);
+    const prog = ROOT.querySelector('#' + progId);
+    const NS = 'http://www.w3.org/2000/svg';
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const DUR = 650;    // 점 하나가 한 구간을 지나는 시간 — 따라갈 수 있되 늘어지지 않게
+    let runId = 0;
+    let session = null; // 단계 모드 진행 상태 { steps, items, i, busy, mine }
+
+    function clearMarks() {
+      svg.querySelectorAll('.vfdot, .halo').forEach(d => d.remove());
+      svg.querySelectorAll('.node').forEach(n => n.classList.remove('on', 'done', 'bad'));
+      svg.querySelectorAll('.wire').forEach(w => w.classList.remove('lit', 'dim'));
+      svg.querySelectorAll('.msg').forEach(t => t.textContent = '');
+    }
+
+    function renderLog(steps) {
+      log.innerHTML = '';
+      steps.forEach(s => {
+        const li = document.createElement('li');
+        const st = document.createElement('span'); st.className = 'st'; st.textContent = s.st;
+        const sd = document.createElement('span'); sd.className = 'sd'; sd.textContent = s.sd;
+        li.appendChild(st); li.appendChild(sd);
+        log.appendChild(li);
+      });
+      prog.textContent = '0 / ' + steps.length;
+    }
+
+    function animateLeg(pts, dur, mine) {
+      return new Promise(resolve => {
+        if (dur <= 0) { resolve(); return; }
+        const halo = document.createElementNS(NS, 'circle');
+        halo.setAttribute('r', '11'); halo.setAttribute('class', 'halo');
+        const dot = document.createElementNS(NS, 'circle');
+        dot.setAttribute('r', '5'); dot.setAttribute('class', 'vfdot');
+        for (const c of [halo, dot]) { c.setAttribute('cx', pts[0][0]); c.setAttribute('cy', pts[0][1]); svg.appendChild(c); }
+        const segs = []; let total = 0;
+        for (let i = 1; i < pts.length; i++) {
+          const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+          segs.push({ a: pts[i - 1], b: pts[i], d }); total += d;
+        }
+        let settled = false;
+        const finish = () => { if (settled) return; settled = true; clearTimeout(guard); dot.remove(); halo.remove(); resolve(); };
+        const guard = setTimeout(finish, dur + 600);
+        const t0 = performance.now();
+        function frame(t) {
+          if (settled) return;
+          if (mine !== runId) { finish(); return; }
+          const p = Math.min(1, (t - t0) / dur);
+          let want = p * total, acc = 0;
+          let x = pts[pts.length - 1][0], y = pts[pts.length - 1][1];
+          for (const s of segs) {
+            if (want <= acc + s.d) { const k = s.d === 0 ? 0 : (want - acc) / s.d; x = s.a[0] + (s.b[0] - s.a[0]) * k; y = s.a[1] + (s.b[1] - s.a[1]) * k; break; }
+            acc += s.d;
+          }
+          dot.setAttribute('cx', x); dot.setAttribute('cy', y);
+          halo.setAttribute('cx', x); halo.setAttribute('cy', y);
+          if (p < 1) requestAnimationFrame(frame); else finish();
+        }
+        requestAnimationFrame(frame);
+      });
+    }
+
+    const wait = (ms, mine) => new Promise(r => setTimeout(() => r(), mine === runId ? ms : 0));
+    const on = (ids, cls) => ids.forEach(id => { const el = svg.querySelector('#' + id); if (!el) return; if (!cls || cls === 'on') el.classList.remove('done'); el.classList.add(cls || 'on'); });
+    const off = (ids, cls) => ids.forEach(id => { const el = svg.querySelector('#' + id); if (el) el.classList.remove(cls || 'on'); });
+    const settle = () => svg.querySelectorAll('.node.on').forEach(n => { n.classList.remove('on'); n.classList.add('done'); });
+    const msg = (id, text) => { const t = svg.querySelector('#' + id); if (t) t.textContent = text; };
+
+    // 단계 하나를 실행한다. 단계는 { st, sd, nodes, wires, phases, before(), after(), hold }
+    // phases 의 원소는 legs 배열이거나 { legs, after() } 객체다. 원소끼리는 순서대로,
+    // 한 원소 안의 legs 는 동시에 움직인다.
+    async function runStep(s, i, items, mine) {
+      const dur = still.matches ? 0 : DUR;
+      settle();
+      if (s.before) s.before();
+      on(s.nodes || []);
+      on(s.wires || [], 'lit');
+      items.forEach((li, j) => li.classList.toggle('on', j === i));
+      prog.textContent = (i + 1) + ' / ' + items.length;
+      for (const ph of (s.phases || [])) {
+        if (!Array.isArray(ph) && ph.run) {
+          // 점 이동 대신 임의의 비동기 연출(훑기 등). false 를 돌려주면 취소된 것이다
+          const ok = await ph.run(mine);
+          if (!ok || mine !== runId) return false;
+          continue;
+        }
+        const legs = Array.isArray(ph) ? ph : ph.legs;
+        await Promise.all(legs.map(l => animateLeg(l, dur, mine)));
+        if (mine !== runId) return false;
+        if (!Array.isArray(ph) && ph.after) ph.after();
+        if (dur && legs.length) await wait(110, mine);
+      }
+      if (s.after) s.after();
+      return mine === runId;
+    }
+
+    function finishRun(items) {
+      // 끝났으면 강조를 모두 내린다. 남는 것은 진행 표시와 도착한 메시지, 상태 표시뿐이다.
+      svg.querySelectorAll('.node').forEach(n => n.classList.remove('on', 'done'));
+      svg.querySelectorAll('.wire').forEach(w => w.classList.remove('lit'));
+      items.forEach(li => li.classList.remove('on'));
+    }
+
+    function begin(steps) {
+      const mine = ++runId;
+      clearMarks();
+      renderLog(steps);
+      session = { steps, items: [...log.querySelectorAll('li')], i: 0, busy: false, mine };
+      return session;
+    }
+
+    async function play(steps) {
+      const S = begin(steps);
+      const dur = still.matches ? 0 : DUR;
+      for (let i = 0; i < steps.length; i++) {
+        if (S.mine !== runId) return;
+        const ok = await runStep(steps[i], i, S.items, S.mine);
+        if (!ok) return;
+        if (dur) await wait(steps[i].hold || 420, S.mine);
+      }
+      if (S.mine !== runId) return;
+      S.i = steps.length;
+      finishRun(S.items);
+    }
+
+    // 한 단계씩. 세션이 없거나 끝났으면 새로 시작해 첫 단계를 보여준다.
+    async function step(steps) {
+      if (!session || session.mine !== runId || session.i >= session.steps.length) begin(steps);
+      const S = session;
+      if (S.busy) return;
+      S.busy = true;
+      const ok = await runStep(S.steps[S.i], S.i, S.items, S.mine);
+      S.busy = false;
+      if (!ok) return;
+      S.i += 1;
+      // 마지막 단계까지 봤으면 강조를 내리되, 로그의 마지막 줄은 켜 둔다
+      if (S.i >= S.steps.length) {
+        finishRun(S.items);
+        S.items[S.items.length - 1].classList.add('on');
+      }
+    }
+
+    function idle(steps) { runId++; session = null; clearMarks(); renderLog(steps); }
+
+    return { svg, play, step, idle, on, off, msg, get runId() { return runId; } };
+  };
+</script>
+<!-- ============ PROJECT : ADDRESS MATCHING BENCHMARK ============ -->
+<section class="tile tile--dark" id="address-benchmark">
+  <div class="wrap">
+    <div class="projindex"><span class="lab">개인 프로젝트 — Search Performance Engineering</span></div>
+    <div class="pcover">
+      <p class="eyebrow">OCR 후처리 · 비표준 한국 주소 검색</p>
+      <h2 class="hero-display">주소 검색 성능 개선</h2>
+      <div class="rolelead">
+        <p class="rl-label">Overview</p>
+        <p>OCR로 읽은 비표준 주소를 표준 주소에 연결하는 검색을, 실무에서 쓰던 LCS 전수 탐색과 Elasticsearch n-gram 역색인으로 비교했습니다.
+          개인정보 없는 합성 데이터로 100건부터 1천만 건까지 같은 조건을 재현해 정확도와 지연시간을 측정했습니다.</p>
+      </div>
+      <div class="meta">
+        <div class="m"><span class="lbl">프로젝트 유형</span><span class="val">개인 성능 개선 실험</span></div>
+        <div class="m"><span class="lbl">기술</span><span class="val">Java 21 · Elasticsearch · Docker</span></div>
+        <div class="m"><span class="lbl">측정 규모</span><span class="val">100 · 10K · 100K · 1M · 10M documents</span></div>
+        <div class="m"><span class="lbl">저장소</span><span class="val"><a href="https://github.com/ParkJaeHwan-906/address-matching-benchmark" target="_blank" rel="noopener">address-matching-benchmark</a></span></div>
+      </div>
+      <div class="btns">
+        <a class="btn btn--primary" href="#address-deep">실측 결과 보기</a>
+        <a class="btn btn--ghost" href="https://github.com/ParkJaeHwan-906/address-matching-benchmark" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tile tile--light">
+  <div class="wrap">
+    <p class="sectlabel">Intro</p>
+    <h3 class="display-md">같은 질의, 두 가지 검색 경로</h3>
+    <div class="feat3">
+      <div class="feat">
+        <div class="device">
+          <svg class="abfig" viewBox="0 0 320 200" role="img" aria-label="표준 주소에 OCR 오류 규칙을 적용해 질의를 만들고 정답 ID를 보존하는 합성 생성기">
+            <text class="k" x="22" y="34">합성 주소 생성기</text>
+            <text x="22" y="54" style="font-size:11.5px">seed 20260917 · 개인정보 없음</text>
+            <rect class="box" x="22" y="72" width="276" height="34" rx="8"/>
+            <text class="mono" x="34" y="94"><tspan style="fill:var(--body-muted)">표준 </tspan><tspan class="k">서울특별시 강남구 테헤란로 152</tspan></text>
+            <rect class="box" x="22" y="114" width="276" height="34" rx="8"/>
+            <text class="mono" x="34" y="136"><tspan style="fill:var(--body-muted)">OCR  </tspan><tspan class="k">서울특</tspan><tspan class="hi">벌</tspan><tspan class="k">시 강남구 테헤란</tspan><tspan class="hi">노</tspan><tspan class="k"> 152</tspan></text>
+            <text x="22" y="176" style="font-size:12px">정답 ID를 보존 → Top-1 · Top-5 채점 기준</text>
+          </svg>
+        </div>
+        <h4>합성 데이터 생성</h4>
+        <p>표준 주소에 OCR 오류 규칙을 적용해 질의를 만듭니다. 같은 seed로 100건·1만 건·1천만 건을 생성하고 정답 ID로 채점합니다.</p>
+      </div>
+      <div class="feat">
+        <div class="device">
+          <svg class="abfig" viewBox="0 0 320 200" role="img" aria-label="LCS 전수 탐색은 모든 후보와 문자열을 비교하므로 비용이 후보 수에 선형 비례한다">
+            <text class="k" x="22" y="34">LCS 전수 탐색</text>
+            <text x="22" y="54" style="font-size:11.5px">모든 후보와 LCS 계산 · Java 기준선</text>
+            <rect class="bar" x="22" y="70" width="149" height="12" rx="6"/><text class="mono" x="183" y="80">LCS 27</text>
+            <rect class="bar on" x="22" y="90" width="170" height="12" rx="6"/><text class="mono hi" x="204" y="100">LCS 31 · 1위</text>
+            <rect class="bar" x="22" y="110" width="99" height="12" rx="6"/><text class="mono" x="133" y="120">LCS 18</text>
+            <rect class="bar" x="22" y="130" width="127" height="12" rx="6"/><text class="mono" x="161" y="140">LCS 23</text>
+            <rect class="bar" x="22" y="150" width="77" height="12" rx="6"/><text class="mono" x="111" y="160">LCS 14 … × N</text>
+            <text x="22" y="184" style="font-size:12px">후보 N건 전부 비교, 가장 긴 LCS가 1위 → 비용 ∝ N</text>
+          </svg>
+        </div>
+        <h4>LCS 전수 탐색</h4>
+        <p>실무에서 쓰던 방식의 재구성입니다. 후보마다 최장 공통 부분열을 계산하므로 데이터가 늘어난 만큼 느려집니다.</p>
+      </div>
+      <div class="feat">
+        <div class="device">
+          <svg class="abfig" viewBox="0 0 320 200" role="img" aria-label="질의를 2~4-gram으로 분해하고 역색인에서 gram이 겹치는 문서만 후보로 모으는 Elasticsearch 검색">
+            <text class="k" x="22" y="34">Elasticsearch n-gram</text>
+            <text x="22" y="54" style="font-size:11.5px">2~4-gram 역색인 · Docker 단일 노드</text>
+            <g class="chips">
+              <rect class="chip on" x="22" y="70" width="44" height="24" rx="12"/><text class="mono" x="44" y="86" text-anchor="middle">서울</text>
+              <rect class="chip on" x="72" y="70" width="44" height="24" rx="12"/><text class="mono" x="94" y="86" text-anchor="middle">울특</text>
+              <rect class="chip" x="122" y="70" width="44" height="24" rx="12"/><text class="mono" x="144" y="86" text-anchor="middle">특벌</text>
+              <rect class="chip" x="172" y="70" width="44" height="24" rx="12"/><text class="mono" x="194" y="86" text-anchor="middle">벌시</text>
+              <rect class="chip on" x="222" y="70" width="56" height="24" rx="12"/><text class="mono" x="250" y="86" text-anchor="middle">서울특</text>
+              <rect class="chip on" x="22" y="102" width="56" height="24" rx="12"/><text class="mono" x="50" y="118" text-anchor="middle">강남구</text>
+              <rect class="chip on" x="84" y="102" width="68" height="24" rx="12"/><text class="mono" x="118" y="118" text-anchor="middle">테헤란</text>
+              <rect class="chip" x="158" y="102" width="56" height="24" rx="12"/><text class="mono" x="186" y="118" text-anchor="middle">헤란노</text>
+              <rect class="chip on" x="220" y="102" width="68" height="24" rx="12"/><text class="mono" x="254" y="118" text-anchor="middle">남구 테</text>
+            </g>
+            <text x="22" y="152" style="font-size:12px"><tspan class="hi">■</tspan> 역색인에 있는 gram → 겹치는 문서만 후보</text>
+            <text x="22" y="176" style="font-size:12px">전체 비교 없이 점수화 → Top-5</text>
+          </svg>
+        </div>
+        <h4>Elasticsearch n-gram</h4>
+        <p>질의를 2~4-gram으로 분해해 역색인에서 겹치는 문서만 후보로 모읍니다. 「테헤란노」처럼 오타가 든 gram은 색인에 없어 버려지지만 나머지 gram이 정답을 가리키므로, 오타 한 글자에 검색이 통째로 실패하지 않습니다. 전체 후보 비교도 사라집니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tile tile--dark2">
+  <div class="wrap">
+    <p class="sectlabel">Contribution</p>
+    <div class="contrib contrib--rev">
+      <div class="contrib__img shot">
+        <svg class="abfig abfig--wide" viewBox="0 0 560 384" role="img" aria-label="generate, index, compare 세 명령으로 100건·1만 건·1천만 건 시나리오를 같은 절차로 실행하고 결과를 JSON으로 남기는 벤치마크 구조">
+          <text class="k" x="28" y="40" style="font-size:15px">address-bench — 한 CLI, 세 시나리오</text>
+          <g>
+            <rect class="box" x="28" y="64" width="150" height="58" rx="10"/>
+            <text class="mono k" x="44" y="88">generate</text>
+            <text x="44" y="108" style="font-size:11.5px">합성 주소 · 오류 질의</text>
+            <path d="M178 93 L204 93" style="stroke:var(--hairline);stroke-width:1.5;fill:none"/><path d="M200 89 L206 93 L200 97" style="stroke:var(--hairline);stroke-width:1.5;fill:none"/>
+            <rect class="box" x="206" y="64" width="150" height="58" rx="10"/>
+            <text class="mono k" x="222" y="88">index</text>
+            <text x="222" y="108" style="font-size:11.5px">2~4-gram 색인 · --recreate</text>
+            <path d="M356 93 L382 93" style="stroke:var(--hairline);stroke-width:1.5;fill:none"/><path d="M378 89 L384 93 L378 97" style="stroke:var(--hairline);stroke-width:1.5;fill:none"/>
+            <rect class="box" x="384" y="64" width="148" height="58" rx="10"/>
+            <text class="mono k" x="400" y="88">compare</text>
+            <text x="400" y="108" style="font-size:11.5px">LCS vs ES · 같은 질의</text>
+          </g>
+          <text class="k" x="28" y="152" style="font-size:12px;letter-spacing:.06em">시나리오</text>
+          <g style="font-size:12px">
+            <rect class="box" x="28" y="162" width="504" height="28" rx="8"/>
+            <text class="k" x="44" y="181">Tiny</text><text class="mono" x="120" y="181">100</text><text x="250" y="181">직접 비교 100질의</text>
+            <rect class="box" x="28" y="196" width="504" height="28" rx="8"/>
+            <text class="k" x="44" y="215">Small</text><text class="mono" x="120" y="215">10,000</text><text x="250" y="215">직접 비교 100 · ES 단독 1,000</text>
+            <rect class="box" x="28" y="230" width="504" height="28" rx="8"/>
+            <text class="k" x="44" y="249">Medium</text><text class="mono" x="120" y="249">100,000</text><text x="250" y="249">직접 비교 100 · ES 단독 1,000</text>
+            <rect class="box" x="28" y="264" width="504" height="28" rx="8"/>
+            <text class="k" x="44" y="283">Big</text><text class="mono" x="120" y="283">1,000,000</text><text x="250" y="283">직접 비교 100 · ES 단독 1,000</text>
+            <rect class="box" x="28" y="298" width="504" height="28" rx="8"/>
+            <text class="k" x="44" y="317">Large</text><text class="mono" x="120" y="317">10,000,000</text><text x="250" y="317">직접 비교 100 · ES 1,000 · 색인 370초</text>
+          </g>
+          <text class="k" x="28" y="350" style="font-size:12px;letter-spacing:.06em">측정 지표</text>
+          <text class="mono" x="28" y="370">Top-1 · Top-5 · MRR · p50 · p95 · p99 · QPS → results/*.json</text>
+        </svg>
+      </div>
+      <div class="contrib__text">
+        <div class="cblock">
+          <h4>재현 가능한 벤치마크 설계</h4>
+          <ul class="bul">
+            <li>개인정보 없는 합성 주소 생성기 — seed 20260917, 주소 ID별 고유 지번을 보장해 서로 다른 정답이 같은 문자열을 갖는 충돌 제거</li>
+            <li>100건부터 1천만 건까지 다섯 시나리오를 같은 CLI(generate → index → compare)로 실행 — Java 21 · Gradle · picocli · Jackson, Elasticsearch 클라이언트 없이 java.net.http로 직접 호출</li>
+            <li>Top-1·Top-5·MRR, p50·p95·p99, QPS를 정답 ID 기준으로 측정하고 원본 JSON을 그대로 보관</li>
+          </ul>
+        </div>
+        <div class="cblock">
+          <h4>두 검색 경로 구현·비교</h4>
+          <ul class="bul">
+            <li>LCS 전수 탐색 — 모든 후보와 LCS를 계산하는 Java 기준선. 적재 시 alias를 한 번만 정규화하고 두 행 int[] DP와 Top-5 힙으로 구현</li>
+            <li>Elasticsearch 2~4-gram 역색인 — Docker Compose 단일 노드(8.17.4 · 2GB heap)에 1천만 문서를 370초에 색인, 약 1.8GB</li>
+            <li>n-gram을 고른 이유 — 단어 단위 역색인은 오타가 든 토큰이 색인에 없어 검색 자체가 실패하고, 코사인 유사도는 오타 하나로 벡터가 움직여 순위가 흔들림. 2~4-gram은 오타를 gram 몇 개의 손실로 가두고 <code>minimum_should_match 55%</code>로 그 손실을 허용</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ADDRESS : Deep Dive (규모별 전환점 · 검색 경로 시연) ============ -->
+<section class="tile tile--light tile--tight" id="address-deep">
+  <div class="wrap">
+    <p class="sectlabel">Deep Dive</p>
+    <h3 class="display-md">작을 때는 단순하게,<br>커지면 역색인으로.</h3>
+    <p class="lead" style="max-width:60ch;font-size:clamp(17px,1.9vw,21px)">같은 seed와 오류 규칙으로 만든 주소를 두 방식에 넣었습니다. 정확도를 정답 ID로, 속도를 p50·p95와 QPS로 확인한 결과, 1만 건 근처에서 교차됐습니다.</p>
+    <div class="ts" style="margin-top:32px">
+      <div class="tscard">
+        <span class="tag tag--c">제약</span>
+        <ul>
+          <li>LCS는 모든 주소 후보와 문자열을 비교해 비용이 데이터 규모에 선형 비례</li>
+          <li>1천만 건에서는 한 질의가 약 7초 — 온라인 요청으로 처리 불가</li>
+          <li>실제 고객 주소는 쓸 수 없어 합성 데이터로 같은 조건을 재현</li>
+        </ul>
+      </div>
+      <div class="tscard">
+        <span class="tag tag--t">판단</span>
+        <ul>
+          <li>100건에서는 LCS가 33배 빠름 — 검색 엔진은 HTTP 왕복과 고정 비용만으로 2~3ms</li>
+          <li>1만 건에서 교차(ES 1.35배) — 10만·100만·1천만 건에서 9배·37배·196배로 벌어짐</li>
+          <li>후보가 늘면 두 방식 모두 Top-1이 떨어지는데 LCS가 더 크게 떨어짐 — 1천만 건에서 79% vs 86%</li>
+        </ul>
+      </div>
+      <div class="tscard">
+        <span class="tag tag--s">선택</span>
+        <ul>
+          <li>1만 건 이하 매핑 테이블은 LCS로 단순하게 유지</li>
+          <li>대규모는 n-gram 역색인으로 후보를 찾고 상위 후보만 LCS로 재순위 — 오타에 강한 후보 회수와 정밀한 순위 결정을 나눠 맡김</li>
+          <li>LCS 기준선도 Elasticsearch와 같은 JVM 위에서 실행해 언어 차이가 결론에 섞이지 않게 함</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="vf" id="address-demos" style="padding:0 0 96px">
+<div class="vfwrap">
+
+  <h4 class="sec" style="margin-top:0">대표 지표</h4>
+  <div class="stats">
+    <div class="stat">
+      <span class="lbl">100건 · LCS 우세 <span class="pv m">실측</span></span>
+      <span class="val">0.08<span class="u">ms</span></span>
+      <span class="note">Elasticsearch 2.74ms<br>작은 후보군에서는 전수 탐색이 33배 빠름</span>
+    </div>
+    <div class="stat vfhero">
+      <span class="lbl">1만 건 · 교차점 <span class="pv m">실측</span></span>
+      <span class="val">1.35<span class="u">배</span></span>
+      <span class="note">ES 2.95ms vs LCS 3.96ms<br>Top-1 정확도는 양쪽 모두 100%</span>
+    </div>
+    <div class="stat vfhero">
+      <span class="lbl">1천만 건 · 같은 100질의 <span class="pv m">실측</span></span>
+      <span class="val">196<span class="u">배</span></span>
+      <span class="note">Elasticsearch 36.68ms<br>LCS 7,178.45ms · 약 7.2초</span>
+    </div>
+    <div class="stat">
+      <span class="lbl">1천만 건 · ES Top-5 <span class="pv m">실측</span></span>
+      <span class="val">97.7<span class="u">%</span></span>
+      <span class="note">1,000개 질의 · p50 37.79ms<br>인덱스 10,000,000문서 · 약 1.8GB · 색인 370초</span>
+    </div>
+  </div>
+  <p class="legend"><span class="pv m">실측</span>직접 측정한 값 &nbsp;·&nbsp; 합성 데이터 seed 20260917 &nbsp;·&nbsp; 2026-09-17 · Windows 11 · Ryzen 5 5600 · Java 21 · Elasticsearch 8.17.4</p>
+
+  <h4 class="sec">시연 — 검색어 하나, 두 검색 경로</h4>
+  <p style="max-width:70ch">격자의 점은 매핑 테이블을 줄여 그린 것이고, 실제 후보 수는 고른 규모 그대로입니다. OCR 오류가 섞인 같은 검색어를 넣으면, LCS는 점을 전부 열어 보고 Elasticsearch는 검색어를 n-gram으로 쪼갠 뒤 역색인에 걸리는 점만 엽니다. 시간 표기는 모두 실측값입니다.</p>
+
+  <div class="demo flowdemo" id="ab-root">
+    <div class="demo-bar demo-bar--steps">
+      <div class="dstep">
+        <span class="dnum">1</span><span class="dlabel">규모 고르기</span>
+        <button type="button" class="opt" id="ab-s100" aria-pressed="true">100건</button>
+        <button type="button" class="opt" id="ab-s10k" aria-pressed="false">1만 건</button>
+        <button type="button" class="opt" id="ab-s10m" aria-pressed="false">1천만 건</button>
+      </div>
+      <div class="dstep">
+        <span class="dnum">2</span><span class="dlabel">재생</span>
+        <button type="button" class="run" id="ab-run">▶ 실행</button>
+        <button type="button" class="ghost" id="ab-reset">처음으로</button>
+      </div>
+      <p class="dhint">규모를 고르고 「▶ 실행」을 누르면 LCS가 후보를 전부 훑는 과정과 Elasticsearch가 n-gram으로 일부만 여는 과정이 차례로 진행되고, 아래 로그에 실측 시간이 찍힙니다.</p>
+    </div>
+
+    <div class="demo-pane">
+      <h5>검색 경로 <span id="ab-progress">0 / 0</span></h5>
+      <div class="fig-scroll">
+        <svg id="ab-svg" viewBox="-16 0 776 506" role="img"
+             aria-label="OCR 오류가 섞인 검색어 하나가 위쪽 LCS 경로와 아래쪽 Elasticsearch 경로로 들어간다. LCS는 매핑 테이블의 후보 점을 전부 차례로 열어 보고 Top-5를 정렬한다. Elasticsearch는 검색어를 2-gram 칩으로 쪼개고, 역색인에 있는 칩이 가리키는 점만 켜서 그 후보만 점수화해 Top-5를 낸다. 왼쪽 아래 노드에 두 방식의 실측 시간이 표시된다.">
+          <defs>
+            <marker id="abm" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+              <polygon points="0,0 10,4 0,8" fill="currentColor"/></marker>
+          </defs>
+
+          <rect class="zonebox" x="160" y="16" width="420" height="192" rx="8"/>
+          <text class="wlabel" x="172" y="36">LCS 전수 탐색</text>
+          <text class="wlabel" id="ab-n1" x="568" y="36" text-anchor="end">100건 전부 열어 봄</text>
+          <text class="sline" id="ab-c1" x="172" y="194"></text>
+
+          <rect class="zonebox" x="600" y="16" width="148" height="192" rx="8"/>
+          <text class="wlabel" x="610" y="36">Top-5 · LCS</text>
+
+          <rect class="zonebox" x="160" y="236" width="420" height="254" rx="8"/>
+          <text class="wlabel" x="172" y="256">Elasticsearch — 2~4-gram 역색인</text>
+          <text class="wlabel" id="ab-n2" x="568" y="256" text-anchor="end">100건 중 겹치는 것만</text>
+          <text class="wlabel" id="ab-gnote" x="172" y="334" style="font-size:11px"></text>
+          <text class="sline" id="ab-c2" x="172" y="476"></text>
+
+          <rect class="zonebox" x="600" y="236" width="148" height="254" rx="8"/>
+          <text class="wlabel" x="610" y="256">Top-5 · Elasticsearch</text>
+
+          <line class="wire" id="ab-w1" x1="136" y1="84" x2="160" y2="84" marker-end="url(#abm)"/>
+          <polyline class="wire" id="ab-w2" points="136,110 148,110 148,356 160,356" marker-end="url(#abm)"/>
+          <line class="wire" id="ab-w3" x1="580" y1="112" x2="600" y2="112" marker-end="url(#abm)"/>
+          <line class="wire" id="ab-w4" x1="580" y1="356" x2="600" y2="356" marker-end="url(#abm)"/>
+
+          <g class="node" id="ab-q">
+            <rect x="-12" y="40" width="148" height="94" rx="3"/>
+            <text class="ntitle" x="0" y="62">검색어 · OCR 결과</text>
+            <text class="q" x="0" y="84">서울특<tspan class="e">벌</tspan>시 강남구</text>
+            <text class="q" x="0" y="102">테헤란<tspan class="e">노</tspan> 152</text>
+            <text class="nsub" x="0" y="122">오탈자 2곳 · 정답 있음</text>
+          </g>
+
+          <g id="ab-all"></g>
+          <g id="ab-grams"></g>
+          <g id="ab-idx"></g>
+
+          <g id="ab-top1">
+            <g class="trow" id="ab-r0"><rect x="610" y="50" width="128" height="24" rx="6"/><text x="618" y="66"></text></g>
+            <g class="trow" id="ab-r1"><rect x="610" y="80" width="128" height="24" rx="6"/><text x="618" y="96"></text></g>
+            <g class="trow" id="ab-r2"><rect x="610" y="110" width="128" height="24" rx="6"/><text x="618" y="126"></text></g>
+            <g class="trow" id="ab-r3"><rect x="610" y="140" width="128" height="24" rx="6"/><text x="618" y="156"></text></g>
+            <g class="trow" id="ab-r4"><rect x="610" y="170" width="128" height="24" rx="6"/><text x="618" y="186"></text></g>
+          </g>
+          <g id="ab-top2">
+            <g class="trow" id="ab-e0"><rect x="610" y="270" width="128" height="24" rx="6"/><text x="618" y="286"></text></g>
+            <g class="trow" id="ab-e1"><rect x="610" y="300" width="128" height="24" rx="6"/><text x="618" y="316"></text></g>
+            <g class="trow" id="ab-e2"><rect x="610" y="330" width="128" height="24" rx="6"/><text x="618" y="346"></text></g>
+            <g class="trow" id="ab-e3"><rect x="610" y="360" width="128" height="24" rx="6"/><text x="618" y="376"></text></g>
+            <g class="trow" id="ab-e4"><rect x="610" y="390" width="128" height="24" rx="6"/><text x="618" y="406"></text></g>
+          </g>
+
+          <g class="node" id="ab-res">
+            <rect x="-12" y="236" width="148" height="104" rx="3"/>
+            <text class="ntitle" x="0" y="258">실측 비교</text>
+            <text class="msg" id="ab-m1" x="0" y="280"></text>
+            <text class="msg" id="ab-m2" x="0" y="298"></text>
+            <text class="msg" id="ab-m3" x="0" y="322"></text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="demo-pane stagewrap">
+      <h5>처리 로그</h5>
+      <ol class="stagelog" id="ab-log"></ol>
+    </div>
+  </div>
+
+  <h4 class="sec">직접 비교</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>매핑 데이터</th><th>방식</th><th>질의 수</th><th>Top-1</th><th>Top-5</th><th>p50</th><th>처리량</th></tr></thead>
+      <tbody>
+        <tr><td>100건</td><td>LCS</td><td class="mono">100</td><td>99.0%</td><td>100.0%</td><td class="mono">0.08ms</td><td class="mono">5,562.54 QPS</td></tr>
+        <tr><td>100건</td><td>Elasticsearch</td><td class="mono">100</td><td>99.0%</td><td>99.0%</td><td class="mono">2.74ms</td><td class="mono">348.96 QPS</td></tr>
+        <tr><td>1만 건</td><td>LCS</td><td class="mono">100</td><td>100.0%</td><td>100.0%</td><td class="mono">3.96ms</td><td class="mono">241.22 QPS</td></tr>
+        <tr><td>1만 건</td><td>Elasticsearch</td><td class="mono">100</td><td>100.0%</td><td>100.0%</td><td class="mono">2.95ms</td><td class="mono">324.90 QPS</td></tr>
+        <tr><td>10만 건</td><td>LCS</td><td class="mono">100</td><td>95.0%</td><td>98.0%</td><td class="mono">46.31ms</td><td class="mono">21.11 QPS</td></tr>
+        <tr><td>10만 건</td><td>Elasticsearch</td><td class="mono">100</td><td>96.0%</td><td>98.0%</td><td class="mono">5.00ms</td><td class="mono">191.77 QPS</td></tr>
+        <tr><td>100만 건</td><td>LCS</td><td class="mono">100</td><td>84.0%</td><td>92.0%</td><td class="mono">478.09ms</td><td class="mono">2.07 QPS</td></tr>
+        <tr><td>100만 건</td><td>Elasticsearch</td><td class="mono">100</td><td>95.0%</td><td>99.0%</td><td class="mono">12.81ms</td><td class="mono">73.45 QPS</td></tr>
+        <tr><td>1천만 건</td><td>LCS</td><td class="mono">100</td><td>79.0%</td><td>89.0%</td><td class="mono">7,178.45ms</td><td class="mono">0.14 QPS</td></tr>
+        <tr><td>1천만 건</td><td>Elasticsearch</td><td class="mono">100</td><td>86.0%</td><td>97.0%</td><td class="mono">36.68ms</td><td class="mono">23.58 QPS</td></tr>
+        <tr><td>1천만 건</td><td>Elasticsearch</td><td class="mono">1,000</td><td>90.7%</td><td>97.7%</td><td class="mono">37.79ms</td><td class="mono">23.66 QPS</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="legend">질의 수는 그 행의 Top-1·p50을 낼 때 실제로 던진 검색어 개수입니다. 100인 행은 두 방식에 같은 앞 100개 질의를 넣은 직접 비교, 1,000인 행은 Elasticsearch 단독 측정입니다. 처리량(QPS)은 1초에 처리한 검색어 수입니다.</p>
+
+</div>
+</div>
+
+<section class="tile tile--light">
+  <div class="wrap">
+    <p class="sectlabel">Trouble Shooting</p>
+    <h3 class="display-md">n-gram을 사용한 오타 보정</h3>
+    <div class="ts">
+      <div class="tscard">
+        <span class="tag tag--t">Trouble</span>
+        <ul>
+          <li>전수 탐색을 대신할 후보 축소 방식이 필요했는데, OCR 질의는 「서울특<strong>벌</strong>시 강남구 테헤란<strong>노</strong> 152」처럼 오탈자를 몇 개씩 품고 들어옴</li>
+          <li>단어 단위 역색인은 「테헤란노」가 「테헤란로」와 다른 토큰이라 색인에 걸리지 않음 — 정답 문서가 후보에서 아예 빠짐</li>
+          <li>코사인 유사도는 문자열 하나를 벡터 하나로 만들기 때문에 오타 한 글자가 벡터 전체를 움직여 순위가 크게 흔들림</li>
+        </ul>
+      </div>
+      <div class="tscard">
+        <span class="tag tag--c">Cause</span>
+        <ul>
+          <li>두 방식 모두 비교 단위가 「토큰 전체」 또는 「벡터 하나」라, 오타가 그 단위 전체를 오염시킴</li>
+          <li>OCR 오류는 한 글자 치환·삭제, 공백 제거, 행정구역 축약처럼 국소적인데 비교 단위는 국소적이지 않았음</li>
+          <li>후보를 놓치면 뒤의 재순위가 아무리 정밀해도 복구할 수 없음 — 회수 단계가 오타에 강해야 함</li>
+        </ul>
+      </div>
+      <div class="tscard">
+        <span class="tag tag--s">Solution</span>
+        <ul>
+          <li>2~4-gram 역색인 — 문자열을 두세 글자 단위로 잘라 색인하므로 오타는 gram 몇 개의 손실로 그치고, 나머지 gram이 정답 문서를 가리킴</li>
+          <li>색인 전 문자·숫자만 남기는 char_filter로 공백·기호 차이를 제거하고, <code>minimum_should_match 55%</code>로 오탈자 gram 손실을 허용</li>
+          <li>1천만 건 1,000질의에서 Top-5 97.7% · p50 37.79ms — 오타가 섞인 질의로도 후보를 놓치지 않으면서 전체 비교를 없앰. 남은 Top-1 격차는 후보 안에서 LCS 재순위로 좁히는 것이 다음 단계</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="tile tile--parchment">
+  <div class="wrap">
+    <p class="sectlabel">Retrospect</p>
+    <div class="retro">
+      <div class="rcard">
+        <h4>후보 찾기와 순위 정하기는 다른 문제</h4>
+        <p>1만 건에서 98.9%였던 Elasticsearch Top-1이 1천만 건에서는 90.7%로 내려갔지만, Top-5는 97.7%를 지켰습니다. 정답을 후보에 올리는 일은 역색인이 해냈고, 그 안에서 1위를 고르는 일이 규모와 함께 어려워졌습니다.</p>
+        <p class="lab">배운 점</p>
+        <p>검색을 한 방법으로 끝내려 하지 않고, 놓치지 않는 회수 단계와 정밀한 재순위 단계로 나눠서 봐야 한다는 것을 숫자로 확인했습니다.</p>
+      </div>
+      <div class="rcard">
+        <h4>100건에서는 LCS가 33배 빨랐다</h4>
+        <p>검색 엔진은 HTTP 왕복과 고정 비용만으로 2~3ms를 쓰기 때문에, 후보가 적을 때는 전수 탐색이 오히려 빨랐습니다. 역색인이 앞서기 시작한 것은 1만 건 근처부터였습니다.</p>
+        <p class="lab">배운 점</p>
+        <p>더 빠른 방법은 데이터 규모를 정해야 답할 수 있는 질문이었습니다. 교차점을 직접 재 두니, 작은 매핑 테이블은 단순하게 두고 큰 테이블에만 역색인을 쓰는 기준을 숫자로 설명할 수 있었습니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__cols">
+      <div>
+        <h5>박재환 · Backend Developer</h5>
+        <div class="flist">
+          <span>안정성을 설계하고, 신뢰를 구축하는 개발자.</span>
+          <span>Java · Spring Boot · AWS · Kubernetes · Terraform · Redis · Docker</span>
+        </div>
+      </div>
+      <div>
+        <h5>Contact</h5>
+        <div class="flist">
+          <a href="mailto:doormoo2@naver.com">doormoo2@naver.com</a>
+          <span>010-4572-9525</span>
+        </div>
+      </div>
+      <div>
+        <h5>Links</h5>
+        <div class="flist">
+          <a href="https://github.com/ParkJaeHwan-906" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://parkjaehwan-906.github.io/Portfolio/#projects">Projects</a>
+          <a href="https://parkjaehwan-906.github.io/Portfolio/">Portfolio</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer__legal">© 2026 Park Jae Hwan. Portfolio designed in the spirit of the Apple design language.</div>
+  </div>
+</footer>
+
+<script>
+  // Build proficiency meters (single blue accent per design system)
+  document.querySelectorAll('.meter').forEach(function(m){
+    var n = parseInt(m.dataset.level, 10) || 0;
+    for (var i = 0; i < 5; i++){
+      var d = document.createElement('span');
+      d.className = 'dot' + (i < n ? ' on' : '');
+      m.appendChild(d);
+    }
+  });
+  // Theme toggle
+  var btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme');
+    var next = cur === 'dark' ? 'light'
+             : cur === 'light' ? 'dark'
+             : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', next);
+  });
+
+  /* Publish the scrollbar width so the deep dive's full-bleed figures can
+     bleed to the viewport without counting it (100vw includes the scrollbar). */
+  (function(){
+    function measure(){
+      var sb = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.setProperty('--sbw', (sb > 0 ? sb : 0) + 'px');
+    }
+    measure();
+    window.addEventListener('resize', measure, { passive: true });
+  })();
+
+  /* ---------- Organisation tabs ---------- */
+  (function(){
+    var HEADER = 104;  /* global nav 44 + sub nav 52 + breathing room */
+    var tabs   = Array.prototype.slice.call(document.querySelectorAll('.orgtabs [role="tab"]'));
+    var panels = tabs.map(function(t){ return document.getElementById(t.getAttribute('aria-controls')); });
+    if (!tabs.length) return;
+
+    function select(i, focus){
+      tabs.forEach(function(t, j){
+        var on = i === j;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        panels[j].hidden = !on;
+      });
+      if (focus) tabs[i].focus();
+    }
+
+    tabs.forEach(function(t, i){
+      t.addEventListener('click', function(){ select(i, false); });
+      t.addEventListener('keydown', function(e){
+        var last = tabs.length - 1, n = null;
+        if (e.key === 'ArrowRight') n = i === last ? 0 : i + 1;
+        else if (e.key === 'ArrowLeft') n = i === 0 ? last : i - 1;
+        else if (e.key === 'Home') n = 0;
+        else if (e.key === 'End') n = last;
+        if (n !== null){ e.preventDefault(); select(n, true); }
+      });
+    });
+
+    // Any in-page link may point into a panel that is currently hidden —
+    // reveal its panel first, then scroll, or the jump lands nowhere.
+    function reveal(id){
+      var el = document.getElementById(id);
+      if (!el) return null;
+      var panel = el.closest ? el.closest('.orgpanel') : null;
+      if (panel && panel.hidden){
+        var i = panels.indexOf(panel);
+        if (i >= 0) select(i, false);
+      }
+      return el;
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(function(a){
+      a.addEventListener('click', function(e){
+        var id = a.getAttribute('href').slice(1);
+        if (!id) return;
+        var el = document.getElementById(id);
+        if (!el || !el.closest || !el.closest('.orgpanel')) return;
+        e.preventDefault();
+        reveal(id);
+        // Reading geometry right after unhiding forces the layout pass, so the
+        // target is measured against the panel that is now on screen. Doing this
+        // synchronously rather than in rAF also survives a backgrounded tab,
+        // where frame callbacks are throttled and the jump would never land.
+        var y = el.getBoundingClientRect().top + window.scrollY - HEADER;
+        window.scrollTo({ top: y < 0 ? 0 : y, behavior: 'smooth' });
+        history.replaceState(null, '', '#' + id);
+      });
+    });
+
+    // A hash aimed at a hidden panel does nothing on load — the browser has
+    // already given up on it — so reveal the panel and jump there ourselves.
+    if (location.hash.length > 1) {
+      var target = reveal(decodeURIComponent(location.hash.slice(1)));
+      if (target) {
+        var ty = target.getBoundingClientRect().top + window.scrollY - HEADER;
+        window.scrollTo({ top: ty < 0 ? 0 : ty, behavior: 'instant' });
+      }
+    }
+  })();
+
+</script>
+<script>
+  // ── 주소 검색 시연 · 검색어 하나, 두 검색 경로 ──────────────────────
+  // 연금술사 시연과 같은 엔진(pkFlow)이다. 점 70개를 매핑 테이블의 주소 후보로 두고,
+  // LCS는 점을 전부 차례로 열어 보고, Elasticsearch는 검색어를 2-gram 칩으로 쪼갠 뒤
+  // 역색인에 있는 칩이 가리키는 점만 켠다. 시간 표기는 docs/BENCHMARK_RESULTS.md 실측값이다.
+  (function () {
+    const ROOT = document.getElementById('ab-root');
+    if (!ROOT || !window.pkFlow) return;
+    const F = window.pkFlow(ROOT, 'ab-svg', 'ab-log', 'ab-progress');
+    const NS = 'http://www.w3.org/2000/svg';
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const c1 = ROOT.querySelector('#ab-c1'), c2 = ROOT.querySelector('#ab-c2');
+    const n1 = ROOT.querySelector('#ab-n1'), n2 = ROOT.querySelector('#ab-n2');
+    const gnote = ROOT.querySelector('#ab-gnote');
+
+    // 실측값 — results/*.json (seed 20260917 · 2026-09-17)
+    const CASES = {
+      s100: { label: '100건', n: 100, lcs: 0.0819, es: 2.7388, kind: '같은 100질의 p50', stagger: 9,
+        top: 'Top-1 양쪽 99.0%', verdict: 'LCS가 33배 빠름', short: 'LCS 33배 빠름',
+        why: '후보 100건은 전수 탐색이 0.1ms도 안 걸립니다. 검색 엔진은 HTTP 왕복과 고정 비용만으로 2~3ms를 씁니다' },
+      s10k: { label: '1만 건', n: 10000, lcs: 3.9647, es: 2.9475, kind: '같은 100질의 p50', stagger: 22,
+        top: 'Top-1 양쪽 100%', verdict: 'Elasticsearch가 1.35배 빠름 — 교차점', short: 'ES 1.35배 · 교차점',
+        why: '여기서 두 방식이 교차합니다. LCS는 후보 수에 비례해 4ms까지 올라왔고, 역색인은 100건 때와 거의 같은 3ms입니다' },
+      s10m: { label: '1천만 건', n: 10000000, lcs: 7178.4523, es: 36.6772, kind: '같은 100질의 p50', stagger: 42,
+        top: 'Top-5 ES 97.0% · LCS 89.0%', verdict: 'Elasticsearch가 약 196배 빠름', short: 'ES 약 196배 빠름',
+        why: '전수 탐색 한 번이 7초라 온라인 검색으로 쓸 수 없습니다. 역색인은 1천만 문서(약 1.8GB)에서도 37ms에 끝났습니다' }
+    };
+    let key = 's100';
+
+    const fmtInt = n => n.toLocaleString('en-US');
+    const fmtMs = ms => ms >= 60000
+      ? Math.floor(ms / 60000) + '분 ' + Math.round((ms % 60000) / 1000) + '초'
+      : (ms >= 1000 ? (ms / 1000).toFixed(2) + '초' : ms.toFixed(2) + 'ms');
+    const fmtRaw = ms => fmtInt(Math.round(ms * 100) / 100) + 'ms';
+
+    // 점 격자 — 두 경로 모두 14×5 = 70개. 같은 매핑 테이블을 두 번 그린 것이다
+    function grid(g, cols, rows, x0, y0, dx, dy) {
+      g.innerHTML = '';
+      const dots = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const d = document.createElementNS(NS, 'circle');
+        d.setAttribute('cx', x0 + c * dx); d.setAttribute('cy', y0 + r * dy);
+        d.setAttribute('r', '4.5'); d.setAttribute('class', 'dot');
+        g.appendChild(d); dots.push(d);
+      }
+      return dots;
+    }
+    const ALL = grid(ROOT.querySelector('#ab-all'), 14, 5, 180, 60, 28, 24);
+    const IDX = grid(ROOT.querySelector('#ab-idx'), 14, 5, 180, 352, 28, 24);
+    const ROWS1 = [0, 1, 2, 3, 4].map(i => ROOT.querySelector('#ab-r' + i));
+    const ROWS2 = [0, 1, 2, 3, 4].map(i => ROOT.querySelector('#ab-e' + i));
+
+    // 검색어를 단어별 2-gram으로 쪼갠다. 오탈자(벌·노)가 든 gram은 색인에 없다
+    const QUERY = ['서울특벌시', '강남구', '테헤란노', '152'];
+    const WRONG = ['벌', '노'];
+    const GRAMS = [];
+    QUERY.forEach(w => { for (let i = 0; i + 2 <= w.length; i++) { const g = w.slice(i, i + 2); GRAMS.push({ g, bad: WRONG.some(ch => g.indexOf(ch) >= 0) }); } });
+    const gramsG = ROOT.querySelector('#ab-grams');
+    const CHIPS = GRAMS.map((it, i) => {
+      const col = i % 8, row = Math.floor(i / 8);
+      const x = 172 + col * 48, y = 268 + row * 28;
+      const g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'gram' + (it.bad ? ' bad' : ' on'));
+      const r = document.createElementNS(NS, 'rect');
+      r.setAttribute('x', x); r.setAttribute('y', y); r.setAttribute('width', 42); r.setAttribute('height', 22); r.setAttribute('rx', 11);
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', x + 21); t.setAttribute('y', y + 15); t.setAttribute('text-anchor', 'middle'); t.textContent = it.g;
+      g.appendChild(r); g.appendChild(t); gramsG.appendChild(g);
+      return g;
+    });
+    const GOOD = GRAMS.filter(g => !g.bad).length, BAD = GRAMS.length - GOOD;
+
+    // 매 실행마다 같은 그림이 나오도록 고정 시드 난수
+    function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+    function pick(n, k, rand) {
+      const idx = [...Array(n).keys()];
+      for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+      return idx.slice(0, k);
+    }
+
+    // 항목을 순서대로 하나씩 처리한다. stagger 가 속도다. 시간 기반(rAF)이라 정해진 시간 안에 끝난다
+    function sweep(items, stagger, onPass, onTick, mine) {
+      return new Promise(resolve => {
+        const n = items.length;
+        const end = () => { for (let k = 0; k < n; k++) onPass(k, true); onTick(n); };
+        if (still.matches) { end(); resolve(true); return; }
+        const total = n * stagger;
+        let done = false, last = -1;
+        const finish = ok => { if (done) return; done = true; clearTimeout(guard); end(); resolve(ok); };
+        const guard = setTimeout(() => finish(true), total + 800);
+        const t0 = performance.now();
+        function frame(t) {
+          if (done) return;
+          if (mine !== F.runId) { finish(false); return; }
+          const i = Math.min(n - 1, Math.floor((t - t0) / stagger));
+          for (let k = last + 1; k <= i; k++) onPass(k, false);
+          last = i;
+          onTick(i + 1);
+          if (t - t0 < total) requestAnimationFrame(frame); else finish(true);
+        }
+        requestAnimationFrame(frame);
+      });
+    }
+
+    function resetBoard() {
+      ALL.forEach(d => d.setAttribute('class', 'dot'));
+      IDX.forEach(d => d.setAttribute('class', 'dot'));
+      CHIPS.forEach(g => g.classList.remove('show'));
+      ROWS1.concat(ROWS2).forEach(r => { r.classList.remove('on'); r.querySelector('text').textContent = ''; });
+      c1.textContent = ''; c2.textContent = ''; gnote.textContent = '';
+      c1.classList.remove('g'); c2.classList.remove('g');
+      const c = CASES[key];
+      n1.textContent = fmtInt(c.n) + '건 전부 열어 봄';
+      n2.textContent = fmtInt(c.n) + '건 중 겹치는 것만';
+      F.msg('ab-m1', ''); F.msg('ab-m2', ''); F.msg('ab-m3', '');
+    }
+
+    function buildSteps() {
+      const c = CASES[key];
+      const rand = rng(20260917);
+      const hits = pick(ALL.length, 7, rand);          // 역색인에 걸린 후보 7개 (격자 인덱스)
+      const top = hits.slice(0, 5);                     // 그중 Top-5 — 두 방식이 같은 정답을 1위로 낸다
+      const hitSet = new Set(hits), topSet = new Set(top);
+      const label = (r, i) => (r + 1) + '위 · #' + (i + 1) + (r === 0 ? ' ✓ 정답 ID' : '');
+      return [
+        {
+          st: '검색어 입력 — 「서울특벌시 강남구 테헤란노 152」 · 매핑 테이블 ' + c.label,
+          sd: 'OCR이 「별→벌」「로→노」 두 글자를 잘못 읽은 문자열입니다. 합성 데이터라 정답 ID를 알고 있어 Top-1·Top-5를 채점할 수 있습니다. 같은 검색어를 두 경로에 넣습니다',
+          nodes: ['ab-q'], wires: ['ab-w1', 'ab-w2'],
+          phases: [[[[136, 84], [160, 84]], [[136, 110], [148, 110], [148, 356], [160, 356]]]],
+          before() { resetBoard(); }
+        },
+        {
+          st: 'LCS — 정규화 후 후보 ' + fmtInt(c.n) + '건을 전부 열어 LCS 계산 (' + fmtRaw(c.lcs) + ' · ' + c.kind + ')',
+          sd: '검색어와 후보 문자열의 최장 공통 부분열을 후보마다 계산합니다. 건너뛸 방법이 없어 마지막 점까지 전부 봅니다. 비용은 후보 수에 그대로 비례해 ' + c.label + '에서 ' + fmtMs(c.lcs) + '가 걸렸습니다',
+          nodes: [], wires: [],
+          phases: [{ run: mine => sweep(ALL, c.stagger,
+            (k, instant) => { const d = ALL[k]; d.classList.remove('scan'); d.classList.add('miss'); if (!instant) { d.classList.add('scan'); d.classList.remove('miss'); if (k - 3 >= 0) { ALL[k - 3].classList.remove('scan'); ALL[k - 3].classList.add('miss'); } } },
+            k => { c1.textContent = 'LCS 계산 ' + fmtInt(Math.round(c.n * k / ALL.length)) + ' / ' + fmtInt(c.n) + '건'; }, mine) }],
+          after() { ALL.forEach(d => { d.classList.remove('scan'); d.classList.add('miss'); }); c1.textContent = fmtInt(c.n) + '건 전부 비교 · ' + fmtMs(c.lcs); c1.classList.add('g'); }
+        },
+        {
+          st: 'LCS 점수 내림차순 정렬 → Top-5',
+          sd: '전부 계산한 뒤에야 정렬할 수 있습니다. 정답이 1위로 올라왔지만, 그 답을 얻기 위해 후보 전체를 한 번씩 다 읽은 뒤입니다',
+          nodes: [], wires: ['ab-w3'], phases: [[[[580, 112], [600, 112]]]],
+          after() {
+            ALL.forEach((d, i) => { if (topSet.has(i)) { d.classList.remove('miss'); d.classList.add('top'); } });
+            top.forEach((i, r) => { ROWS1[r].classList.add('on'); ROWS1[r].querySelector('text').textContent = label(r, i); });
+          }
+        },
+        {
+          st: 'Elasticsearch — 검색어를 2~4-gram으로 분해 · 색인에 있는 gram ' + GOOD + '개, 오탈자 gram ' + BAD + '개',
+          sd: '「서울」「울특」처럼 두 글자씩 잘라 역색인의 키로 씁니다. 「특벌」「벌시」「란노」처럼 오탈자가 든 gram은 색인에 없어 버려지지만, 나머지 gram만으로도 정답 문서에 닿습니다. 그림은 2-gram만 표시했고 3·4-gram도 같은 방식입니다',
+          nodes: [], wires: [],
+          phases: [{ run: mine => sweep(CHIPS, 90, k => CHIPS[k].classList.add('show'), k => { gnote.textContent = '2-gram ' + k + ' / ' + CHIPS.length + ' · 파란 칩만 역색인 조회'; }, mine) }],
+          after() { gnote.textContent = '색인에 있는 gram ' + GOOD + '개로 조회 · 오탈자 gram ' + BAD + '개는 버림 (3·4-gram 생략)'; }
+        },
+        {
+          st: '역색인 조회 — gram이 겹치는 후보만 켜짐 · 나머지는 열지 않음',
+          sd: '역색인은 gram → 문서 목록을 미리 갖고 있어, 검색어의 gram이 가리키는 문서만 후보로 모읍니다. 위 LCS 격자와 달리 대부분의 점은 손도 대지 않습니다. 후보가 ' + c.label + '으로 늘어도 열어 보는 문서 수는 gram이 겹치는 만큼만 늘어납니다',
+          nodes: [], wires: [],
+          phases: [{ run: mine => sweep(hits, 130, k => IDX[hits[k]].classList.add('hit'), k => { c2.textContent = '역색인 조회 → gram이 겹치는 후보만 모으는 중'; }, mine) }],
+          after() { c2.textContent = '겹치는 후보만 점수화 · ' + fmtMs(c.es); c2.classList.add('g'); }
+        },
+        {
+          st: '후보 점수화 → Top-5 (' + fmtRaw(c.es) + ' · ' + c.kind + ')',
+          sd: '켜진 후보에만 점수를 매겨 정렬합니다. 전체 비교가 사라졌으므로 ' + c.label + '에서도 ' + fmtMs(c.es) + '에 끝났습니다',
+          nodes: [], wires: ['ab-w4'], phases: [[[[580, 356], [600, 356]]]],
+          after() {
+            IDX.forEach((d, i) => { if (topSet.has(i)) { d.classList.remove('hit'); d.classList.add('top'); } });
+            top.forEach((i, r) => { ROWS2[r].classList.add('on'); ROWS2[r].querySelector('text').textContent = label(r, i); });
+          }
+        },
+        {
+          st: '실측 비교 — ' + c.verdict + ' · ' + c.top,
+          sd: c.why,
+          nodes: ['ab-res'], wires: [], phases: [], hold: 1000,
+          after() { F.msg('ab-m1', 'LCS ' + fmtMs(c.lcs)); F.msg('ab-m2', 'ES ' + fmtMs(c.es)); F.msg('ab-m3', c.short); }
+        }
+      ];
+    }
+
+    function idle() { resetBoard(); F.idle(buildSteps()); }
+    const opts = { s100: ROOT.querySelector('#ab-s100'), s10k: ROOT.querySelector('#ab-s10k'), s10m: ROOT.querySelector('#ab-s10m') };
+    Object.keys(opts).forEach(k => opts[k].addEventListener('click', () => {
+      key = k;
+      Object.keys(opts).forEach(j => opts[j].setAttribute('aria-pressed', j === k ? 'true' : 'false'));
+      idle();
+    }));
+    ROOT.querySelector('#ab-run').addEventListener('click', () => { resetBoard(); F.play(buildSteps()); });
+    ROOT.querySelector('#ab-reset').addEventListener('click', idle);
+    idle();
+  })();
+</script>
+<script>
+  // ── 단계 로그를 셸처럼 — 도달한 줄만 남긴다 ──────────────────────
+  // 각 시연은 현재 단계 li 에 .on 만 붙인다. 여기서 .on 이 붙는 순간 그 줄과
+  // 앞선 줄에 .seen 을 남겨, 재생이 끝나 .on 이 내려가도 로그가 그대로 남게 한다.
+  // 첫 줄에 .on 이 붙으면 새 재생이므로 이전 로그를 비운다.
+  (function () {
+    document.querySelectorAll('.vf .stagelog').forEach(list => {
+      const mo = new MutationObserver(muts => {
+        muts.forEach(m => {
+          const li = m.target;
+          if (!(li instanceof HTMLLIElement) || !li.classList.contains('on')) return;
+          // 방금 .on 이 새로 붙은 경우만 본다. 우리가 .seen 을 쓰면서 생기는 변경은 건너뛴다
+          if ((m.oldValue || '').split(/\s+/).includes('on')) return;
+          // 시나리오별로 줄을 고르는 시연은 앞 줄이 숨어 있을 수 있다 — 보이는 줄 기준으로 센다
+          const all = Array.from(list.children);
+          const items = all.filter(x => x.offsetParent !== null);
+          const i = items.indexOf(li);
+          if (i <= 0) all.forEach(x => { if (x !== li && x.classList.contains('seen')) x.classList.remove('seen'); });
+          for (let k = 0; k <= i; k++) if (!items[k].classList.contains('seen')) items[k].classList.add('seen');
+          list.scrollTop = list.scrollHeight;
+        });
+      });
+      mo.observe(list, { attributes: true, attributeOldValue: true, attributeFilter: ['class'], subtree: true });
+    });
+  })();
+</script>
+</body>
+</html>
